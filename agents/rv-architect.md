@@ -16,6 +16,9 @@ permission:
   task:
     "*": deny
     "rv-scout": allow
+  skill:
+    "*": deny
+    "git-workflow": allow
   todowrite: allow
 ---
 
