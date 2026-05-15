@@ -25,10 +25,6 @@ Use `ty` for type checking.
 
 Use `pytest` for running unit tests with `uv run pytest`.
 
-## Writing Tests
-
-When writing or modifying tests, read `testing-patterns.md` in this skill directory for pytest fixtures, parametrize, assertions, running subsets, and conftest patterns. Only load it when actually writing tests.
-
 ## Verification Workflow
 
 After any code change, run this single pipeline:

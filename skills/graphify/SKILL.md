@@ -1,5 +1,5 @@
 ---
-name: graphify-skill
+name: graphify
 description: Knowledge graph generation, navigation, and query conventions using Graphify. Load when exploring architecture, answering broad codebase questions, or when the user invokes /graphify.
 ---
 

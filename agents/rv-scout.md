@@ -1,5 +1,5 @@
 ---
-description: Read-only codebase explorer. Finds files, searches code, reads structure, and answers questions about the codebase. Cannot modify anything.
+description: Read-only codebase explorer. Finds files, searches code, reads structure, and answers questions about the codebase. Cannot modify, build, or test anything.
 mode: subagent
 model: litellm/bedrock/global.anthropic.claude-haiku-4-5-20251001-v1:0
 temperature: 0.1
@@ -26,12 +26,6 @@ permission:
     "git diff*": allow
     "git branch*": allow
     "git status": allow
-    # Testing
-    "npm run test*": allow
-    "pytest*": allow
-    "cargo test*": allow
-    "go test*": allow
-    "make test*": allow
     # Linting & type checking
     "eslint *": allow
     "ruff *": allow
@@ -39,12 +33,6 @@ permission:
     "tsc --noEmit*": allow
     "cargo check*": allow
     "go vet*": allow
-    # Building
-    "npm run build*": allow
-    "cargo build*": allow
-    "go build*": allow
-    "make build*": allow
-    "make": allow
     # Other npm commands require approval
     "npm *": ask
   webfetch: deny

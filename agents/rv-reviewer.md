@@ -13,6 +13,8 @@ permission:
     "git log*": allow
     "git show*": allow
     "git status*": allow
+    "git merge-base*": allow
+    "git rev-parse*": allow
     # File inspection
     "cd*": allow
     "echo*": allow
@@ -23,8 +25,8 @@ permission:
     "tail*": allow
     "wc*": allow
     # Testing
-    "npx svelte-check": allow
-    "npx tsc": allow
+    "npx svelte-check*": allow
+    "npx tsc*": allow
     "npm run test*": allow
     "uv run pytest*": allow
     "uv run ruff*": allow

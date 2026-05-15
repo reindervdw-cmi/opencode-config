@@ -5,9 +5,11 @@ model: litellm/bedrock/global.anthropic.claude-opus-4-6-v1
 temperature: 0.1
 color: "#F77AFA"
 permission:
-  edit: deny
+  edit: allow
   bash:
     "*": deny
+    "echo*": allow
+    "openspec*": allow
     "git status": allow
     "git stash": ask
     "git commit": ask

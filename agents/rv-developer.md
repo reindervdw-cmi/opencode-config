@@ -1,7 +1,7 @@
 ---
 description: Executes a single development task — writes code, creates tests, and reports completion status. Only modifies files explicitly assigned to it.
 mode: subagent
-model: litellm/bedrock/global.anthropic.claude-opus-4-6-v1
+model: "litellm/bedrock/global.anthropic.claude-sonnet-4-6"
 temperature: 0.4
 color: "#34D399"
 permission:
