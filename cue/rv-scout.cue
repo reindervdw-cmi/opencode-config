@@ -78,6 +78,8 @@ agent: {
 
 			- NEVER suggest modifications. Only report what you find.
 			- If you discover issues during testing or linting, report them factually without proposing fixes.
+
+			\(_brevitySkill)
 			"""
 	}
 }

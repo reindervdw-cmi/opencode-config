@@ -113,6 +113,8 @@ agent: {
 			- Distinguish critical (must fix) vs minor (nice to fix)
 			- Reference file paths and line numbers
 			- Use LSP tools to trace symbol usage when needed
+
+			\(_brevitySkill)
 			"""
 	}
 }

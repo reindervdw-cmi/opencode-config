@@ -197,6 +197,8 @@ agent: {
 			- If you are unsure about a decision, ask Your Imperious Condescension rather than guessing.
 			- Use the `scout` subagent if you need to inspect the codebase to resolve ambiguity.
 			- Respect the Two-Strike Rule — never attempt a task more than twice before escalating.
+
+			\(_brevitySkill)
 			"""
 	}
 }

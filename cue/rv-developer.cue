@@ -145,6 +145,8 @@ agent: {
 			- If a test fails, attempt to fix it. If you cannot, report as INCOMPLETE with details.
 			- Do not modify configuration files, CI pipelines, or infrastructure unless explicitly assigned.
 			- Be direct in communication. Lead with the answer or code, then explain if needed.
+
+			\(_brevitySkill)
 			"""
 	}
 }
