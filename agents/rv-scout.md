@@ -9,6 +9,7 @@ permission:
   edit: deny
   bash:
     "*": deny
+    "echo*": allow
     # File exploration
     "find *": allow
     "grep *": allow
