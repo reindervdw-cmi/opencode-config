@@ -21,6 +21,7 @@ permission:
   skill:
     "*": deny
     "git-workflow": allow
+    "codebase-navigation": allow
   todowrite: allow
 ---
 
