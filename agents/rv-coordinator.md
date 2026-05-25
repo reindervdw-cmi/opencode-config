@@ -34,12 +34,6 @@ permission:
     "git reset --soft*": allow
     "git reset --mixed*": allow
     "git reset --hard*": ask
-    # Testing
-    "npm run test*": allow
-    "pytest*": allow
-    "cargo test*": allow
-    "go test*": allow
-    "make test*": allow
     # Linting & type checking
     "eslint *": allow
     "ruff *": allow
@@ -118,9 +112,7 @@ Between phases or after completing batches of tasks, create checkpoint commits t
 
    Example: `checkpoint: Task 1 - Add login endpoint, Task 2 - Add validation`
 
-3. **Verification before commit** (optional): If tests are fast and relevant, consider running them before committing. This is at your discretion.
-
-4. **On failure requiring rollback**:
+3. **On failure requiring rollback**:
    - Prefer `git stash` or `git reset --soft HEAD~1` for minor issues
    - For `git reset --hard`, ask Your Imperious Condescension first
    - After rollback, re-dispatch the failed task with updated instructions

@@ -68,46 +68,12 @@ B. [Second option and its tradeoffs]
 
 **Important**: Only ask questions for genuine ambiguities that affect correctness. Do not ask questions you could answer by exploring the codebase with the scout subagent.
 
-## Simplicity First
-
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- If you write 200 lines and it could be 50, rewrite it.
-- Prefer small, focused functions/methods that do one thing well.
-
-## Surgical Changes
-
-When editing existing code:
-
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code or tech debt, **flag it** in your report — don't silently delete it.
-
-When your changes create orphans:
-
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless assigned.
-
 ## Goal-Driven Execution
 
 Transform tasks into verifiable goals:
 
 - "Add validation" → "Write tests for invalid inputs, then make them pass"
 - "Fix the bug" → "Write a test that reproduces it, then make it pass"
-
-## Naming & Readability
-
-- Use clear, descriptive names for variables, functions, types, and files.
-- Avoid abbreviations unless universally understood (e.g., `id`, `url`, `http`).
-- Code should read as close to prose as possible.
-- Comments should explain **why**, not **what**.
-
-## Type Safety & Error Handling
-
-- Handle errors explicitly. Don't swallow exceptions silently.
-- Fail fast and fail loudly.
 
 ## Dependencies
 
