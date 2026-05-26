@@ -4,7 +4,7 @@ agent: {
 	"rv-reviewer": {
 		description: "Reviews all changes against the plan's definitions of done. Checks for logical errors, missing pieces, test coverage, and code quality. Cannot modify files."
 		mode:        "all"
-		model:       "litellm/bedrock/global.anthropic.claude-opus-4-6-v1"
+		model:      _modelDefs.highEffort.id 
 		temperature: 0.1
 		color:       "#F472B6"
 		permission: {

@@ -4,7 +4,7 @@ agent: {
 	"rv-coordinator": {
 		description: "Coordinates task execution."
 		mode:        "primary"
-		model:       "litellm/bedrock/global.anthropic.claude-sonnet-4-6"
+		model:      _modelDefs.midEffort.id 
 		temperature: 0.1
 		color:       "#00AF00"
 		permission: {

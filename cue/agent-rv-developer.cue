@@ -4,7 +4,7 @@ agent: {
 	"rv-developer": {
 		description: "Executes a single development task — writes code, creates tests, and reports completion status. Only modifies files explicitly assigned to it."
 		mode:        "subagent"
-		model:       "litellm/bedrock/global.anthropic.claude-sonnet-4-6"
+		model:      _modelDefs.midEffort.id 
 		temperature: 0.4
 		color:       "#34D399"
 		permission: {

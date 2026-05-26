@@ -4,7 +4,7 @@ agent: {
 	"rv-architect": {
 		description: "Creates task plans"
 		mode:        "primary"
-		model:       "litellm/bedrock/global.anthropic.claude-opus-4-6-v1"
+		model:      _modelDefs.highEffort.id 
 		temperature: 0.1
 		color:       "#F77AFA"
 		permission: {
