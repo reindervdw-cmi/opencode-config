@@ -4,7 +4,7 @@ agent: {
 	"rv-architect": {
 		description: "Creates task plans"
 		mode:        "primary"
-		model:      _modelDefs.highEffort.id 
+		model:      "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
 		temperature: 0.1
 		color:       "#F77AFA"
 		permission: {

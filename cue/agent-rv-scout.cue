@@ -4,7 +4,7 @@ agent: {
 	"rv-scout": {
 		description: "Read-only codebase explorer. Finds files, searches code, reads structure, and answers questions about the codebase. Cannot modify, build, or test anything."
 		mode:        "subagent"
-		model:      _modelDefs.lowEffort.id 
+		model:      "\(_modelDefs.lowEffort.provider)/\(_modelDefs.lowEffort.id)"
 		temperature: 0.1
 		color:       "#FBBF24"
 		hidden:      false
