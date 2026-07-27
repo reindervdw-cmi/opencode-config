@@ -22,6 +22,7 @@ agent: {
 				"ls *":             "allow"
 				"tree *":           "allow"
 				"file *":           "allow"
+                "git worktree*": "allow"
 				"git log*":         "allow"
 				"git show*":        "allow"
 				"git diff*":        "allow"

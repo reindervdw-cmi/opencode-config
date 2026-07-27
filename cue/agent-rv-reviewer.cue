@@ -10,31 +10,14 @@ agent: {
 		permission: {
 			edit: "deny"
 			bash: {
-				"*":                 "ask"
+				"*":                 "allow"
+                "git*":              "deny"
 				"git diff*":         "allow"
 				"git log*":          "allow"
 				"git show*":         "allow"
 				"git status*":       "allow"
 				"git merge-base*":   "allow"
 				"git rev-parse*":    "allow"
-				"cd*":               "allow"
-				"echo*":             "allow"
-				"grep*":             "allow"
-				"find*":             "allow"
-				"cat*":              "allow"
-				"head*":             "allow"
-				"tail*":             "allow"
-				"wc*":               "allow"
-				"npx svelte-check*": "allow"
-				"npx tsc*":          "allow"
-				"npm run test*":     "allow"
-				"uv run pytest*":    "allow"
-				"uv run ruff*":      "allow"
-				"uv run ty*":        "allow"
-				"pytest*":           "allow"
-				"cargo test*":       "allow"
-				"go test*":          "allow"
-				"make test*":        "allow"
 			}
 			webfetch: "deny"
 			task: {
@@ -57,7 +40,7 @@ agent: {
 
 			## Workflow
 
-			1. Read plan + developer reports
+			1. Read the request; sometimes this may come directly from the user without a specific DoD. In those cases, feel free to ask for clarifications until you have enough information to review.
 			2. Inspect actual changes (git diff, file reading, `scout` subagent)
 			3. Verify each DoD item independently
 			4. Check for issues beyond DoD

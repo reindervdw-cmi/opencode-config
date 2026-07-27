@@ -4,18 +4,18 @@ package opencode
 
 _modelDefs: {
     highEffort: {
-        id:   "bedrock/global.anthropic.claude-opus-4-6-v1"
-        name: "Claude Opus 4.6"
+        id:   "bedrock/global.anthropic.claude-opus-5"
+        name: "Claude Opus 5.0"
         provider: "litellm"
     }
     midEffort: {
-        id:   "bedrock/global.anthropic.claude-sonnet-4-6"
-        name: "Claude Sonnet 4.6"
+        id:   "bedrock/us.anthropic.claude-sonnet-4-6"
+        name: "Claude sonnet 4.6"
         provider: "litellm"
     }
     lowEffort: {
-        id:   "bedrock/global.anthropic.claude-haiku-4-5-20251001-v1:0"
-        name: "Claude Haiku 4.5"
+        id:   "bedrock/zai.glm-5"
+        name: "GLM 5"
         provider: "litellm"
     }
 }
@@ -51,3 +51,5 @@ lsp: {
 		extensions: [".py", ".pyi"]
 	}
 }
+
+plugin: ["context-mode"]
