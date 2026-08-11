@@ -3,7 +3,7 @@ package opencode
 agent: {
 	"rv-coordinator": {
 		description: "Coordinates task execution."
-		mode:        "primary"
+		mode:        "all"
 		model:      "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
 		temperature: 0.1
 		color:       "#00AF00"
@@ -33,6 +33,7 @@ agent: {
 				"git checkout *":   "allow"
 				"git switch *":     "allow"
 				"git stash *":      "allow"
+                "git merge*":       "allow"
 				"git reset --soft*":  "allow"
 				"git reset --mixed*": "allow"
 				"git reset --hard*":  "ask"
@@ -63,6 +64,7 @@ agent: {
 			question: "allow"
 			task: {
 				"*":             "deny"
+                "rv-coordinator": "allow"
 				"rv-developer":  "allow"
 				"rv-reviewer":   "allow"
 				"rv-scout":      "allow"

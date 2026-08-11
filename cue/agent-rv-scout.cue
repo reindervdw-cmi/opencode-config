@@ -69,6 +69,7 @@ agent: {
 			- Lead with the answer, then provide supporting detail if needed.
 			- When listing files, use full paths relative to the project root.
 			- When showing code, include file path and line numbers.
+			- Refuse to write out complete files, relevant snippets is OK.
 
 			## Response Compaction
 

@@ -22,6 +22,7 @@ agent: {
 			task: {
 				"*":        "deny"
 				"rv-scout": "allow"
+                "rv-coordinator": "allow"
 			}
 			skill: {
 				"*":                  "deny"

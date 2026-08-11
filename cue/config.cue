@@ -52,4 +52,3 @@ lsp: {
 	}
 }
 
-plugin: ["context-mode"]
