@@ -13,7 +13,7 @@ agent: {
 				"*":                     "deny"
 				"echo*":                 "allow"
 				"az account show*":      "allow"
-				"az login*":             "ask"
+				"az login*":             "allow"
 				"az devops configure*":  "allow"
 				"az boards query*":      "allow"
 				"az boards work-item show*":     "allow"

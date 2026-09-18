@@ -4,7 +4,7 @@ agent: {
 	"rv-reviewer": {
 		description: "Reviews all changes against the plan's definitions of done. Checks for logical errors, missing pieces, test coverage, and code quality. Cannot modify files."
 		mode:        "all"
-		model:      "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
+		model:      "\(_modelDefs.highEffort.provider)/\(_modelDefs.midEffort.id)"
 		temperature: 0.1
 		color:       "#F472B6"
 		permission: {
