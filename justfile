@@ -1,6 +1,3 @@
-# CUE is source of truth. Edit cue/, then run `just build`.
-# Requires CUE v0.14.2 and Node.js; no dependencies are installed by recipes.
-# Override explicitly: CUE=/absolute/path/to/cue just validate
 export CUE := env_var_or_default("CUE", "cue")
 
 # Show available commands.
