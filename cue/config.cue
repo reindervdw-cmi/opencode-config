@@ -4,18 +4,18 @@ package opencode
 
 _modelDefs: {
     highEffort: {
-        id:   "bedrock/global.anthropic.claude-opus-5"
-        name: "Claude Opus 5.0"
+        id:   "bedrock/global.anthropic.claude-opus-5-5"
+        name: "Opus 5.5"
         provider: "litellm"
     }
     midEffort: {
-        id:   "bedrock/us.anthropic.claude-sonnet-4-6"
-        name: "Claude sonnet 4.6"
+        id:   "bedrock/global.openai.gpt-6.1-sol"
+        name: "GPT-6.1 Sol"
         provider: "litellm"
     }
     lowEffort: {
-        id:   "bedrock/zai.glm-5"
-        name: "GLM 5"
+        id:   "bedrock/global.openai.gpt-6-luna"
+        name: "GPT-6 Luna"
         provider: "litellm"
     }
 }
@@ -23,13 +23,16 @@ _modelDefs: {
 share: "disabled"
 
 enabled_providers: ["litellm"]
+permission: {
+    "webfetch": "deny"
+}
 
 provider: {
 	litellm: {
 		npm:  "@ai-sdk/openai-compatible"
 		name: "LiteLLM"
 		options: {
-			baseURL: "https://agentic-prod-litellm.mangoocean-f4f0496c.eastus.azurecontainerapps.io"
+			baseURL: "https://litellm-prod-litellm.wonderfulriver-dd795f9a.eastus.azurecontainerapps.io/"
 		}
 		models: {
             for _, model in _modelDefs {

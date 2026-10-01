@@ -86,6 +86,7 @@ agent: {
 			- If a test fails, try to fix it. If you cannot, report `INCOMPLETE` with the actual error output.
 			- Leave no `TODO`, `FIXME`, debug print, or commented-out code behind.
 			- Do not expand scope. Note adjacent problems in your report and move on.
+			- Using only the minimal number of comments. Especially do not make section blocks with comments.
 
 			\(_statusVocabulary)
 

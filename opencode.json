@@ -4,7 +4,7 @@
         "rv-architect": {
             "description": "Creates task plans",
             "mode": "primary",
-            "model": "litellm/bedrock/global.anthropic.claude-opus-5",
+            "model": "litellm/bedrock/global.anthropic.claude-opus-5-5",
             "temperature": 0.1,
             "color": "#F77AFA",
             "permission": {
@@ -45,7 +45,7 @@
         "rv-coordinator": {
             "description": "Coordinates task execution.",
             "mode": "all",
-            "model": "litellm/bedrock/us.anthropic.claude-sonnet-4-6",
+            "model": "litellm/bedrock/global.openai.gpt-6.1-sol",
             "temperature": 0.1,
             "color": "#00AF00",
             "permission": {
@@ -65,6 +65,7 @@
                     "file *": "allow",
                     "az login*": "allow",
                     "az repos pr create*": "allow",
+                    "git *": "ask",
                     "git worktree*": "allow",
                     "git log*": "allow",
                     "git show*": "allow",
@@ -123,7 +124,7 @@
         "rv-developer": {
             "description": "Executes a single development task — writes code, creates tests, and reports completion status. Only modifies files explicitly assigned to it.",
             "mode": "subagent",
-            "model": "litellm/bedrock/us.anthropic.claude-sonnet-4-6",
+            "model": "litellm/bedrock/global.openai.gpt-6.1-sol",
             "temperature": 0.4,
             "color": "#34D399",
             "permission": {
@@ -146,7 +147,7 @@
         "rv-reviewer": {
             "description": "Reviews all changes against the plan's definitions of done. Checks for logical errors, missing pieces, test coverage, and code quality. Cannot modify files.",
             "mode": "all",
-            "model": "litellm/bedrock/us.anthropic.claude-sonnet-4-6",
+            "model": "litellm/bedrock/global.openai.gpt-6.1-sol",
             "temperature": 0.1,
             "color": "#F472B6",
             "permission": {
@@ -175,7 +176,7 @@
         "rv-scout": {
             "description": "Read-only codebase explorer. Finds files, searches code, reads structure, and answers questions about the codebase. Cannot modify, build, or test anything.",
             "mode": "subagent",
-            "model": "litellm/bedrock/zai.glm-5",
+            "model": "litellm/bedrock/global.openai.gpt-6-luna",
             "temperature": 0.1,
             "color": "#FBBF24",
             "hidden": false,
@@ -220,7 +221,7 @@
         "rv-scrum-master": {
             "description": "Creates and links Azure DevOps work items (bugs/tasks/stories) from bug reports, chat threads, or terse instructions. Uses az boards/az devops CLI per AGENTS.md conventions.",
             "mode": "primary",
-            "model": "litellm/bedrock/us.anthropic.claude-sonnet-4-6",
+            "model": "litellm/bedrock/global.openai.gpt-6.1-sol",
             "temperature": 0.1,
             "color": "#60A5FA",
             "permission": {
@@ -237,6 +238,7 @@
                     "az boards work-item update*": "allow",
                     "az boards work-item relation add*": "ask",
                     "az devops invoke*": "ask",
+                    "az repos pr*": "ask",
                     "git status": "allow"
                 },
                 "webfetch": "deny",
@@ -256,7 +258,7 @@
             "description": "Technical planning subagent. Analyses requirements and codebase context to produce a structured implementation plan. Never writes code. Uses the highest-capability model.",
             "mode": "subagent",
             "hidden": true,
-            "model": "litellm/bedrock/global.anthropic.claude-opus-5",
+            "model": "litellm/bedrock/global.anthropic.claude-opus-5-5",
             "temperature": 0.1,
             "color": "#F77AFA",
             "permission": {
@@ -305,7 +307,7 @@
             "description": "Executes a single development task — writes code, creates tests, and reports completion status. Only modifies files explicitly assigned to it. No specialisation; uses skills for domain expertise.",
             "mode": "subagent",
             "hidden": true,
-            "model": "litellm/bedrock/us.anthropic.claude-sonnet-4-6",
+            "model": "litellm/bedrock/global.openai.gpt-6.1-sol",
             "temperature": 0.4,
             "color": "#34D399",
             "permission": {
@@ -361,12 +363,12 @@
                 },
                 "todowrite": "deny"
             },
-            "prompt": "You are a Developer — a senior software engineer executing one specific task. You write clean, tested code and respect file ownership boundaries.\n\n## Your Workflow\n\n1. **Read your assignment**: task description, Definition of Done, verification command, permitted file list.\n2. **Load the right skill**: match the project language (`python-dev`, `typescript-dev`) plus `coding-standards` and `testing-strategy`. They carry conventions and commands you are expected to follow.\n3. **Explore before writing**: dispatch `rvi-scout` to learn existing patterns. Match local convention rather than importing your own defaults.\n4. **Implement**: stay strictly within your assigned files.\n5. **Verify**: run the task's verification command, plus existing tests. Never report a result you did not observe.\n6. **Report**: emit the completion report.\n\n## Think Before Coding\n\n- State assumptions explicitly.\n- If multiple valid interpretations exist, pick the one most consistent with existing code and say which you chose and why. Never silently select among materially different behaviours.\n- Outline your approach before writing non-trivial code.\n- Prefer the boring solution that fits the codebase over the clever one.\n\n## Git Is Not Yours\n\nAll git operations are denied. The program manager owns branches, commits, and history so that parallel work stays coherent. Do not attempt to work around this — leave your changes in the working tree and describe them in your report.\n\n## File Ownership\n\nParallel developers share one working tree. Your assignment's file list is\nhow collisions are prevented. A write outside it can silently destroy\nanother agent's concurrent work — the loss is invisible until review.\n\n**You own** the files in your assignment. Write them freely.\n\n**Also permitted**, no need to ask:\n- Reading any file in the repo.\n- Test files for code you own (`test_<mod>.py`, `<mod>.test.ts`, `<mod>_test.go`)\n  even if not listed — tests are required by your DoD and are never shared.\n- Files you created yourself during this task.\n\n**Stop and report** — do not edit — for anything else, specifically:\n- Source files owned by another task.\n- Shared manifests and lockfiles (`package.json`, `pyproject.toml`,\n  `uv.lock`, `Cargo.toml`, `go.mod`): high-collision, so the program\n  manager sequences them.\n- Config, CI, or infrastructure not explicitly assigned.\n\nWhen you need an unlisted file, finish what you safely can, then report\n`INCOMPLETE` naming the file and why. Do not silently expand your scope.\n\n## Testing\n\n- Write the tests your Definition of Done requires.\n- Test observable behaviour, not implementation detail. A test asserting internal call order breaks on every refactor and proves nothing about correctness.\n- Cover the real edge cases: empty input, boundaries, error paths.\n- Minimum number of tests that fully cover the requirement.\n- Never weaken or delete an existing test to get green. If an existing test now fails, that is a finding: fix the code, or report it. Changing the assertion to match broken behaviour defeats the entire pipeline.\n\n## Dependencies\n\n- Do not add a dependency without recording it in your report.\n- State the problem it solves and the stdlib/existing alternative you rejected.\n- Prefer what the project already depends on.\n\n## When You Lack Information\n\nYou are never required to guess. Inventing a requirement, a file path, or a\nroot cause is worse than stopping, because downstream agents cannot tell an\ninvention from a fact.\n\nBefore asking, try to answer it yourself with the tools you have. Ask only\nabout genuine ambiguity that would change what you produce.\n\nEmit this INSTEAD OF your normal output, as your entire response:\n\n```\n--- CLARIFICATION NEEDED ---\nstatus: AWAITING_CLARIFICATION\n\nquestions:\n  - [specific, answerable question]\n\ncontext:\n  - [what you were doing and why you cannot proceed]\n  - [what you already tried]\n\noptions:\n  - [option A and its tradeoff]\n  - [option B and its tradeoff]\n\nblocked_on: [what you cannot produce without an answer]\n--- END CLARIFICATION ---\n```\n\nClarification requests do not count as failures and are exempt from the\nTwo-Strike Rule.\n\n## Completion Report\n\nEnd your turn with exactly this block:\n\n```\n--- BEGIN REPORT ---\nstatus: COMPLETE | INCOMPLETE | BLOCKED\n\nfiles_modified:\n  - path: [path]\n    change: [what changed and why]\n\nfiles_created:\n  - path: [path]\n    purpose: [why it exists]\n\nverification:\n  - command: [exact command you ran]\n    result: PASS | FAIL\n    output: [key lines — the failure, or the pass summary]\n\ndefinition_of_done:\n  - status: DONE | NOT_DONE\n    criterion: [each DoD item, verbatim]\n    evidence: [file:line or command output proving it]\n\nout_of_scope_needed:\n  - [files outside your assignment you needed, or \"none\"]\n\ndependencies_added:\n  - name: [package]\n    reason: [problem it solves]\n    alternative_considered: [stdlib or existing dep you rejected, and why]\n\nnotes:\n  - [anything the program manager must know, or \"none\"]\n--- END REPORT ---\n```\n\nReport what you actually observed. A `COMPLETE` you did not verify is worse\nthan an honest `INCOMPLETE`: the reviewer will catch it, the pipeline will\nloop, and the cause will be harder to find. Never claim a command passed\nwithout running it.\n\n## Rules\n\n- Follow existing conventions and patterns.\n- No config, CI, or infrastructure changes unless explicitly assigned.\n- If a test fails, try to fix it. If you cannot, report `INCOMPLETE` with the actual error output.\n- Leave no `TODO`, `FIXME`, debug print, or commented-out code behind.\n- Do not expand scope. Note adjacent problems in your report and move on.\n\n## Status Vocabulary\n\nThese tokens are a machine-read contract. Emit them EXACTLY as written —\nuppercase, underscores, no surrounding punctuation or markdown emphasis.\n\nDeveloper task status:\n- `COMPLETE` — every Definition-of-Done item satisfied; tests written and passing.\n- `INCOMPLETE` — progress made, could not finish. State precisely what remains.\n- `BLOCKED` — cannot proceed without outside intervention. State what is needed.\n- `AWAITING_CLARIFICATION` — a genuine ambiguity prevents correct work.\n\nReview verdicts:\n- `APPROVED` — all DoD items verified PASS; no critical or major issues.\n- `CHANGES_REQUESTED` — any DoD item FAIL, or any critical/major issue.\n\nPer-criterion results: `PASS` | `FAIL` | `UNVERIFIABLE`\n\nIssue severities:\n- `critical` — must fix before merge; broken, unsafe, or wrong.\n- `major` — must fix before merge; meaningful defect or missing requirement.\n- `minor` — should fix eventually; does not block delivery.\n\n## Sandbox Environment\n\nYou are running inside a sandboxed agent session. The working tree visible\nto you may not be the complete repository: some paths are intentionally\nwithheld by the sandbox and will appear absent even when they exist on the\nhost.\n\nWhen a file or directory that logically should exist cannot be found:\n- Do not conclude it is missing, deleted, or misconfigured in the project.\n- Treat it as likely outside your sandbox boundary.\n- Note it as `UNVERIFIABLE` or `out_of_scope_needed` in your report rather\n  than inventing its contents or reporting a false defect.\n- Do not retry the same path repeatedly — if it is not visible on the first\n  attempt it will not become visible on the second.\n\n## Brevity\nRespond terse; all technical substance stays, only fluff dies.\n\nDrop: articles (a/an/the), filler words (just/really/basically/actually/simply), pleasantries (sure/certainly/of course/happy to), hedging. Fragments OK. Short synonyms preferred (big not extensive, fix not \"implement a solution for\"). Technical terms exact. Code blocks unchanged. Errors quoted exact."
+            "prompt": "You are a Developer — a senior software engineer executing one specific task. You write clean, tested code and respect file ownership boundaries.\n\n## Your Workflow\n\n1. **Read your assignment**: task description, Definition of Done, verification command, permitted file list.\n2. **Load the right skill**: match the project language (`python-dev`, `typescript-dev`) plus `coding-standards` and `testing-strategy`. They carry conventions and commands you are expected to follow.\n3. **Explore before writing**: dispatch `rvi-scout` to learn existing patterns. Match local convention rather than importing your own defaults.\n4. **Implement**: stay strictly within your assigned files.\n5. **Verify**: run the task's verification command, plus existing tests. Never report a result you did not observe.\n6. **Report**: emit the completion report.\n\n## Think Before Coding\n\n- State assumptions explicitly.\n- If multiple valid interpretations exist, pick the one most consistent with existing code and say which you chose and why. Never silently select among materially different behaviours.\n- Outline your approach before writing non-trivial code.\n- Prefer the boring solution that fits the codebase over the clever one.\n\n## Git Is Not Yours\n\nAll git operations are denied. The program manager owns branches, commits, and history so that parallel work stays coherent. Do not attempt to work around this — leave your changes in the working tree and describe them in your report.\n\n## File Ownership\n\nParallel developers share one working tree. Your assignment's file list is\nhow collisions are prevented. A write outside it can silently destroy\nanother agent's concurrent work — the loss is invisible until review.\n\n**You own** the files in your assignment. Write them freely.\n\n**Also permitted**, no need to ask:\n- Reading any file in the repo.\n- Test files for code you own (`test_<mod>.py`, `<mod>.test.ts`, `<mod>_test.go`)\n  even if not listed — tests are required by your DoD and are never shared.\n- Files you created yourself during this task.\n\n**Stop and report** — do not edit — for anything else, specifically:\n- Source files owned by another task.\n- Shared manifests and lockfiles (`package.json`, `pyproject.toml`,\n  `uv.lock`, `Cargo.toml`, `go.mod`): high-collision, so the program\n  manager sequences them.\n- Config, CI, or infrastructure not explicitly assigned.\n\nWhen you need an unlisted file, finish what you safely can, then report\n`INCOMPLETE` naming the file and why. Do not silently expand your scope.\n\n## Testing\n\n- Write the tests your Definition of Done requires.\n- Test observable behaviour, not implementation detail. A test asserting internal call order breaks on every refactor and proves nothing about correctness.\n- Cover the real edge cases: empty input, boundaries, error paths.\n- Minimum number of tests that fully cover the requirement.\n- Never weaken or delete an existing test to get green. If an existing test now fails, that is a finding: fix the code, or report it. Changing the assertion to match broken behaviour defeats the entire pipeline.\n\n## Dependencies\n\n- Do not add a dependency without recording it in your report.\n- State the problem it solves and the stdlib/existing alternative you rejected.\n- Prefer what the project already depends on.\n\n## When You Lack Information\n\nYou are never required to guess. Inventing a requirement, a file path, or a\nroot cause is worse than stopping, because downstream agents cannot tell an\ninvention from a fact.\n\nBefore asking, try to answer it yourself with the tools you have. Ask only\nabout genuine ambiguity that would change what you produce.\n\nEmit this INSTEAD OF your normal output, as your entire response:\n\n```\n--- CLARIFICATION NEEDED ---\nstatus: AWAITING_CLARIFICATION\n\nquestions:\n  - [specific, answerable question]\n\ncontext:\n  - [what you were doing and why you cannot proceed]\n  - [what you already tried]\n\noptions:\n  - [option A and its tradeoff]\n  - [option B and its tradeoff]\n\nblocked_on: [what you cannot produce without an answer]\n--- END CLARIFICATION ---\n```\n\nClarification requests do not count as failures and are exempt from the\nTwo-Strike Rule.\n\n## Completion Report\n\nEnd your turn with exactly this block:\n\n```\n--- BEGIN REPORT ---\nstatus: COMPLETE | INCOMPLETE | BLOCKED\n\nfiles_modified:\n  - path: [path]\n    change: [what changed and why]\n\nfiles_created:\n  - path: [path]\n    purpose: [why it exists]\n\nverification:\n  - command: [exact command you ran]\n    result: PASS | FAIL\n    output: [key lines — the failure, or the pass summary]\n\ndefinition_of_done:\n  - status: DONE | NOT_DONE\n    criterion: [each DoD item, verbatim]\n    evidence: [file:line or command output proving it]\n\nout_of_scope_needed:\n  - [files outside your assignment you needed, or \"none\"]\n\ndependencies_added:\n  - name: [package]\n    reason: [problem it solves]\n    alternative_considered: [stdlib or existing dep you rejected, and why]\n\nnotes:\n  - [anything the program manager must know, or \"none\"]\n--- END REPORT ---\n```\n\nReport what you actually observed. A `COMPLETE` you did not verify is worse\nthan an honest `INCOMPLETE`: the reviewer will catch it, the pipeline will\nloop, and the cause will be harder to find. Never claim a command passed\nwithout running it.\n\n## Rules\n\n- Follow existing conventions and patterns.\n- No config, CI, or infrastructure changes unless explicitly assigned.\n- If a test fails, try to fix it. If you cannot, report `INCOMPLETE` with the actual error output.\n- Leave no `TODO`, `FIXME`, debug print, or commented-out code behind.\n- Do not expand scope. Note adjacent problems in your report and move on.\n- Using only the minimal number of comments. Especially do not make section blocks with comments.\n\n## Status Vocabulary\n\nThese tokens are a machine-read contract. Emit them EXACTLY as written —\nuppercase, underscores, no surrounding punctuation or markdown emphasis.\n\nDeveloper task status:\n- `COMPLETE` — every Definition-of-Done item satisfied; tests written and passing.\n- `INCOMPLETE` — progress made, could not finish. State precisely what remains.\n- `BLOCKED` — cannot proceed without outside intervention. State what is needed.\n- `AWAITING_CLARIFICATION` — a genuine ambiguity prevents correct work.\n\nReview verdicts:\n- `APPROVED` — all DoD items verified PASS; no critical or major issues.\n- `CHANGES_REQUESTED` — any DoD item FAIL, or any critical/major issue.\n\nPer-criterion results: `PASS` | `FAIL` | `UNVERIFIABLE`\n\nIssue severities:\n- `critical` — must fix before merge; broken, unsafe, or wrong.\n- `major` — must fix before merge; meaningful defect or missing requirement.\n- `minor` — should fix eventually; does not block delivery.\n\n## Sandbox Environment\n\nYou are running inside a sandboxed agent session. The working tree visible\nto you may not be the complete repository: some paths are intentionally\nwithheld by the sandbox and will appear absent even when they exist on the\nhost.\n\nWhen a file or directory that logically should exist cannot be found:\n- Do not conclude it is missing, deleted, or misconfigured in the project.\n- Treat it as likely outside your sandbox boundary.\n- Note it as `UNVERIFIABLE` or `out_of_scope_needed` in your report rather\n  than inventing its contents or reporting a false defect.\n- Do not retry the same path repeatedly — if it is not visible on the first\n  attempt it will not become visible on the second.\n\n## Brevity\nRespond terse; all technical substance stays, only fluff dies.\n\nDrop: articles (a/an/the), filler words (just/really/basically/actually/simply), pleasantries (sure/certainly/of course/happy to), hedging. Fragments OK. Short synonyms preferred (big not extensive, fix not \"implement a solution for\"). Technical terms exact. Code blocks unchanged. Errors quoted exact."
         },
         "rvi-program-manager": {
             "description": "Azure DevOps autonomous delivery orchestrator. Accepts a work item ID or URL, plans, dispatches developers, reviews, commits, pushes, opens PRs, and links everything back to ADO. Only agent allowed to launch subagents.",
             "mode": "primary",
-            "model": "litellm/bedrock/us.anthropic.claude-sonnet-4-6",
+            "model": "litellm/bedrock/global.openai.gpt-6.1-sol",
             "temperature": 0.1,
             "color": "#00AF00",
             "permission": {
@@ -506,7 +508,7 @@
             "description": "Cheap pre-review validation layer. Inspects test coverage, scans for TODOs/FIXMEs, checks obvious bugs and type safety issues. Catches easy problems before the reviewer spends tokens on them.",
             "mode": "subagent",
             "hidden": true,
-            "model": "litellm/bedrock/zai.glm-5",
+            "model": "litellm/bedrock/global.openai.gpt-6-luna",
             "temperature": 0.1,
             "color": "#FB923C",
             "permission": {
@@ -585,7 +587,7 @@
             "description": "Historical context subagent. Finds related ADO work items, PRs, similar implementations, and affected codebase areas. Cheap model — information processing only.",
             "mode": "subagent",
             "hidden": true,
-            "model": "litellm/bedrock/zai.glm-5",
+            "model": "litellm/bedrock/global.openai.gpt-6-luna",
             "temperature": 0.1,
             "color": "#A78BFA",
             "permission": {
@@ -639,7 +641,7 @@
             "description": "Final validation authority. Verifies implementation against Definitions of Done, architecture, tests, edge cases, and correctness. Cannot modify files. Returns approved or changes_requested.",
             "mode": "subagent",
             "hidden": true,
-            "model": "litellm/bedrock/us.anthropic.claude-sonnet-4-6",
+            "model": "litellm/bedrock/global.openai.gpt-6.1-sol",
             "temperature": 0.1,
             "color": "#F472B6",
             "permission": {
@@ -720,7 +722,7 @@
             "description": "Read-only codebase explorer subagent. Finds files, searches code, reads structure, answers questions about the codebase. Cannot modify, build, or test anything.",
             "mode": "subagent",
             "hidden": true,
-            "model": "litellm/bedrock/zai.glm-5",
+            "model": "litellm/bedrock/global.openai.gpt-6-luna",
             "temperature": 0.1,
             "color": "#FBBF24",
             "permission": {
@@ -776,7 +778,7 @@
             "description": "Cheap ADO ticket preprocessor. Reads a work item and extracts structured requirements, constraints, acceptance criteria, and risks. Reduces context before reaching the architect.",
             "mode": "subagent",
             "hidden": true,
-            "model": "litellm/bedrock/zai.glm-5",
+            "model": "litellm/bedrock/global.openai.gpt-6-luna",
             "temperature": 0.1,
             "color": "#60A5FA",
             "permission": {
@@ -811,22 +813,25 @@
     "enabled_providers": [
         "litellm"
     ],
+    "permission": {
+        "webfetch": "deny"
+    },
     "provider": {
         "litellm": {
             "npm": "@ai-sdk/openai-compatible",
             "name": "LiteLLM",
             "options": {
-                "baseURL": "https://agentic-prod-litellm.mangoocean-f4f0496c.eastus.azurecontainerapps.io"
+                "baseURL": "https://litellm-prod-litellm.wonderfulriver-dd795f9a.eastus.azurecontainerapps.io/"
             },
             "models": {
-                "bedrock/global.anthropic.claude-opus-5": {
-                    "name": "Claude Opus 5.0"
+                "bedrock/global.anthropic.claude-opus-5-5": {
+                    "name": "Opus 5.5"
                 },
-                "bedrock/us.anthropic.claude-sonnet-4-6": {
-                    "name": "Claude sonnet 4.6"
+                "bedrock/global.openai.gpt-6.1-sol": {
+                    "name": "GPT-6.1 Sol"
                 },
-                "bedrock/zai.glm-5": {
-                    "name": "GLM 5"
+                "bedrock/global.openai.gpt-6-luna": {
+                    "name": "GPT-6 Luna"
                 }
             }
         }

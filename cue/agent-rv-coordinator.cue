@@ -24,6 +24,7 @@ agent: {
 				"file *":           "allow"
                 "az login*": "allow"
                 "az repos pr create*": "allow"
+                "git *": "ask"
                 "git worktree*": "allow"
 				"git log*":         "allow"
 				"git show*":        "allow"

@@ -21,6 +21,7 @@ agent: {
 				"az boards work-item update*":   "allow"
 				"az boards work-item relation add*": "ask"
 				"az devops invoke*":     "ask"
+                "az repos pr*": "ask"
 				"git status":            "allow"
 			}
 			webfetch: "deny"
