@@ -1,7 +1,7 @@
 package opencode
 
 agent: {
-	"rvi-developer": {
+	"delivery-developer": {
 		description: "Executes a single development task — writes code, creates tests, and reports completion status. Only modifies files explicitly assigned to it. No specialisation; uses skills for domain expertise."
 		mode:        "subagent"
 		hidden:      true
@@ -9,13 +9,15 @@ agent: {
 		temperature: 0.4
 		color:       "#34D399"
 		permission: {
-			edit: "allow"
+			edit:            "allow"
+			lsp_rename:      "allow"
+			lsp_codeactions: "allow"
 			// The developer needs a broad bash baseline to build and test in any
 			// language, so this is allow-by-default with guardrails appended.
 			// Because deny fragments come LAST, they beat the "*" allow.
 			//
 			// _denyGit: history is owned solely by the program manager.
-			// _denyForgeCli: no ADO/PR side effects from inside a task.
+			// _denyForgeCli: no issue/PR side effects on either forge inside a task.
 			// _denyInfra: no infrastructure mutation.
 			// _denyGlobalMutation: no host-level changes or network fetches.
 			bash: (_bashRules & {#frags: [
@@ -28,8 +30,8 @@ agent: {
 			webfetch: "deny"
 			question:  "deny"
 			task: {
-				"*":         "deny"
-				"rvi-scout": "allow"
+				"*":              "deny"
+				"delivery-scout": "allow"
 			}
 			skill: {
 				"*": "allow"
@@ -43,7 +45,7 @@ agent: {
 
 			1. **Read your assignment**: task description, Definition of Done, verification command, permitted file list.
 			2. **Load the right skill**: match the project language (`python-dev`, `typescript-dev`) plus `coding-standards` and `testing-strategy`. They carry conventions and commands you are expected to follow.
-			3. **Explore before writing**: dispatch `rvi-scout` to learn existing patterns. Match local convention rather than importing your own defaults.
+			3. **Explore before writing**: dispatch `delivery-scout` to learn existing patterns. Match local convention rather than importing your own defaults.
 			4. **Implement**: stay strictly within your assigned files.
 			5. **Verify**: run the task's verification command, plus existing tests. Never report a result you did not observe.
 			6. **Report**: emit the completion report.
@@ -58,6 +60,14 @@ agent: {
 			## Git Is Not Yours
 
 			All git operations are denied. The program manager owns branches, commits, and history so that parallel work stays coherent. Do not attempt to work around this — leave your changes in the working tree and describe them in your report.
+
+			GitHub and Azure DevOps CLI operations are also denied. Issue updates, comments, and pull requests belong to the program manager; do not bypass these boundaries through APIs, wrappers, or subprocesses.
+
+			## Shared Working Tree Delivery
+
+			Delivery tasks run in one shared working tree. Parallel execution requires disjoint file ownership and no dependencies. If ownership overlaps, stop and ask the program manager to merge or sequence the tasks. Optional worktrees in interactive workflows are a separate choice; do not create worktrees or switch branches for a delivery task.
+
+			Editing tools, including LSP rename and code actions, are authorized only within your assigned files. Preview cross-file changes before applying them; if any affected path is unassigned, request reassignment rather than mutating it.
 
 			\(_fileOwnership)
 

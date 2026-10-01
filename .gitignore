@@ -1,0 +1,30 @@
+# Installed dependencies and local runtime state, never distribution inputs.
+node_modules/
+/context-mode/
+/bun.lock
+/bun.lockb
+.cache/
+.local/
+logs/
+storage/
+sessions/
+*.log
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+
+# Credentials and machine-specific overrides. Keep manifests and this file.
+.env
+.env.*
+.npmrc
+auth.json
+credentials.json
+credentials/
+secrets/
+*.pem
+*.key
+/opencode.local.json
+/opencode.local.jsonc

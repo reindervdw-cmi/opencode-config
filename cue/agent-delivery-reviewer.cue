@@ -1,7 +1,7 @@
 package opencode
 
 agent: {
-	"rvi-reviewer": {
+	"delivery-reviewer": {
 		description: "Final validation authority. Verifies implementation against Definitions of Done, architecture, tests, edge cases, and correctness. Cannot modify files. Returns approved or changes_requested."
 		mode:        "subagent"
 		hidden:      true
@@ -9,7 +9,9 @@ agent: {
 		temperature: 0.1
 		color:       "#F472B6"
 		permission: {
-			edit: "deny"
+			edit:            "deny"
+			lsp_rename:      "deny"
+			lsp_codeactions: "deny"
 			// The reviewer is told never to trust a self-report, so it must be
 			// able to run the suite itself. _testRun is what makes that
 			// instruction actionable; _lintDenyWrite keeps it non-mutating.
@@ -24,8 +26,8 @@ agent: {
 			webfetch: "deny"
 			question:  "deny"
 			task: {
-				"*":         "deny"
-				"rvi-scout": "allow"
+				"*":              "deny"
+				"delivery-scout": "allow"
 			}
 			skill: {
 				"*":                   "deny"
@@ -44,19 +46,19 @@ agent: {
 
 			## Input
 
-			- The original acceptance criteria from the work item (with IDs)
+			- The original acceptance criteria from the issue (with IDs)
 			- The complete implementation plan (tasks, DoDs, coverage map)
 			- Summary of developer completions
 			- The QA report
 
-			## Verify Against The Ticket, Not Just The Plan
+			## Verify Against The Issue, Not Just The Plan
 
 			Two distinct questions, both yours:
 
 			1. **Did we build the plan?** Every DoD item satisfied.
 			2. **Did we build what was asked?** Every original acceptance criterion actually met.
 
-			The second is the one that catches real failure. The plan is itself a derived artifact — a requirement can be dropped in triage or missed by the architect, and then every DoD passes while the ticket goes unsatisfied. Check each acceptance criterion ID against the delivered code directly. If a criterion has no corresponding implementation, that is `CHANGES_REQUESTED` even when every DoD passes.
+			The second is the one that catches real failure. The plan is itself a derived artifact — a requirement can be dropped in triage or missed by the architect, and then every DoD passes while the issue goes unsatisfied. Check each acceptance criterion ID against the delivered code directly. If a criterion has no corresponding implementation, that is `CHANGES_REQUESTED` even when every DoD passes.
 
 			## Run The Tests Yourself
 
@@ -132,7 +134,7 @@ agent: {
 			- Verify each item individually. Never approve in aggregate.
 			- Distinguish blocking (critical/major) from non-blocking (minor). Do not inflate a nit into a blocker — it sends the pipeline into needless rework. Do not downgrade a real defect — it ships.
 			- Cite exact paths and line numbers.
-			- Use `rvi-scout` and LSP tools to trace symbols and find implementations.
+			- Use `delivery-scout` and read-only LSP tools to trace symbols and find implementations. Never apply renames or code actions.
 
 			\(_statusVocabulary)
 

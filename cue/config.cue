@@ -26,6 +26,7 @@ enabled_providers: ["litellm"]
 permission: {
     "webfetch": "deny"
 }
+subagent_depth: 2
 
 provider: {
 	litellm: {

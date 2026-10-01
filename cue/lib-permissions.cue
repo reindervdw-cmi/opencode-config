@@ -2,35 +2,6 @@ package opencode
 
 import "list"
 
-// Shared bash permission fragments.
-//
-// WHY LISTS INSTEAD OF STRUCTS:
-// opencode evaluates bash permission rules by pattern match where the LAST
-// matching rule wins. Field order in the exported JSON is therefore semantic,
-// not cosmetic.
-//
-// CUE emits all literal fields of a struct BEFORE any embedded definition's
-// fields, regardless of where the embedding is written. That means a struct
-// like:
-//
-//     bash: {
-//         "*":         "deny"
-//         "git push*": "deny"   // literal -> emitted early
-//         _gitWrite             // embedded -> emitted LATER, contains "git *"
-//     }
-//
-// would emit "git *": "allow" AFTER the local "git push*": "deny", silently
-// escalating privilege. With two or more embeddings the catch-all "*" drifts
-// into the middle of the output and denies everything after it.
-//
-// Ordered lists of [pattern, action] pairs avoid both traps: _bash preserves
-// concatenation order exactly, so "deny-narrowing" fragments can always be
-// placed last and actually win.
-//
-// Duplicate patterns with conflicting actions are a hard build error rather
-// than a silent override, which turns permission mistakes into `make validate`
-// failures. Use _bashOverride to intentionally re-specify a pattern.
-
 // _bash converts an ordered list of [pattern, action] pairs into the struct
 // shape opencode expects, preserving order.
 _bash: {
@@ -48,18 +19,12 @@ _bashRules: {
 	out: (_bash & {#rules: list.Concat(#frags)}).out
 }
 
-// --- Baseline ------------------------------------------------------------
-
 // Deny-by-default. Must come first in every composition.
 _denyAll: [["*", "deny"]]
 
-// --- Read-only inspection ------------------------------------------------
-
-// Filesystem inspection. Note trailing " *" on each: a bare "wc" pattern does
-// not match "wc -l file", so every command that takes arguments needs it.
+// Filesystem inspection. Use glob instead of find, which can delete or execute.
 _readOnlyFs: [
 	["echo*", "allow"],
-	["find *", "allow"],
 	["grep *", "allow"],
 	["rg *", "allow"],
 	["cat *", "allow"],
@@ -70,32 +35,42 @@ _readOnlyFs: [
 	["ls", "allow"],
 	["tree *", "allow"],
 	["file *", "allow"],
+	["*>*", "deny"],
 ]
 
-// Read-only git. "git status*" (not bare "git status") so that
-// `git status --porcelain` and `git status -sb` also match.
+// Read-only git. Output files and redirects are writes, not inspection.
 _gitRead: [
 	["git status*", "allow"],
 	["git log*", "allow"],
 	["git show*", "allow"],
 	["git diff*", "allow"],
-	["git branch*", "allow"],
+	["git branch", "allow"],
+	["git branch --list", "allow"],
+	["git branch -a", "allow"],
+	["git branch -r", "allow"],
+	["git branch -v", "allow"],
+	["git branch -vv", "allow"],
+	["git remote", "allow"],
+	["git remote -v", "allow"],
+	["git remote --verbose", "allow"],
+	["git remote get-url*", "allow"],
 	["git rev-parse*", "allow"],
 	["git merge-base*", "allow"],
 	["git ls-files*", "allow"],
+	["*git *--output*", "deny"],
+	["*git *>*", "deny"],
 ]
 
-// --- Verification --------------------------------------------------------
-
-// Linters and type checkers. Non-mutating.
-// Note: "ruff *" covers `ruff format`, which DOES mutate; _lintDenyWrite
-// narrows that back out for read-only agents.
+// Check entry points, including routine runners and skill-recommended forms.
 _lint: [
-	["eslint *", "allow"],
-	["ruff *", "allow"],
-	["mypy *", "allow"],
-	["ty *", "allow"],
-	["tsc --noEmit*", "allow"],
+	for prefix in ["", "uv run ", "uv run --no-sync "]
+	for cmd in ["ruff check*", "mypy *", "ty check*"] {
+		["\(prefix)\(cmd)", "allow"]
+	},
+	for prefix in ["", "./node_modules/.bin/", "npx ", "bunx ", "bun run ", "pnpm exec "]
+	for cmd in ["eslint *", "prettier --check*", "tsc --noEmit*", "tsc *--noEmit*"] {
+		["\(prefix)\(cmd)", "allow"]
+	},
 	["cargo check*", "allow"],
 	["cargo clippy*", "allow"],
 	["go vet*", "allow"],
@@ -104,46 +79,79 @@ _lint: [
 // Narrowing fragment: strip the mutating subcommands back out of _lint.
 // Place AFTER _lint so it wins.
 _lintDenyWrite: [
-	["ruff format*", "deny"],
-	["eslint --fix*", "deny"],
-	["eslint * --fix*", "deny"],
+	// Leading wildcards also cover runners such as uv run, npx, and bunx.
+	["*ruff format*", "deny"],
+	// Last-match semantics: allow checks after the generic formatter denial,
+	// then deny fixes/output writes even when combined with --check.
+	for prefix in ["", "uv run ", "uv run --no-sync ", "bun run ", "pnpm exec ", "npx ", "bunx "] {
+		["\(prefix)ruff format *--check*", "allow"]
+	},
+	["*ruff *--output-file*", "deny"],
+	["*ruff *-o*", "deny"],
+	["*ruff *>*", "deny"],
+	["*prettier *--write*", "deny"],
+	["*prettier *-w*", "deny"],
+	["*eslint *--fix*", "deny"],
+	["*eslint *--output-file*", "deny"],
+	["*eslint *-o*", "deny"],
+	["*eslint *--cache*", "deny"],
+	["*cargo clippy*--fix*", "deny"],
+	["*tsc *--noEmit false*", "deny"],
+	["*tsc *--noEmit=false*", "deny"],
+	// Verification runners never authorize Git or forge operations, including
+	// when appended to an otherwise allowed verification command.
+	for cmd in ["git", "gh", "az"] {
+		["* \(cmd) *", "deny"]
+	},
+	["*ruff *--fix*", "deny"],
 ]
 
-// Test and build execution. Required by any agent expected to verify that
-// code actually works rather than trusting a self-report.
+// Inspected test/build scripts only; never grant an unrestricted runner.
 _testRun: [
 	["pytest*", "allow"],
 	["uv run pytest*", "allow"],
-	["uv run *", "allow"],
+	["uv run --no-sync pytest*", "allow"],
 	["npm test*", "allow"],
 	["npm run test*", "allow"],
 	["npm run build*", "allow"],
 	["npm run lint*", "allow"],
 	["npm run typecheck*", "allow"],
-	["bun test*", "allow"],
-	["bun run *", "allow"],
-	["pnpm test*", "allow"],
-	["pnpm run *", "allow"],
+	["bun test", "allow"],
+	["bun test *", "allow"],
+	for runner in ["bun run", "pnpm run"]
+	for cmd in ["test", "test *", "build", "build *", "lint", "lint *", "typecheck", "typecheck *"] {
+		["\(runner) \(cmd)", "allow"]
+	},
+	["pnpm test", "allow"],
+	["pnpm test *", "allow"],
+	for prefix in ["./node_modules/.bin/", "npx ", "bunx ", "bun run ", "pnpm exec "]
+	for cmd in ["jest *", "vitest run*"] {
+		["\(prefix)\(cmd)", "allow"]
+	},
 	["yarn test*", "allow"],
 	["cargo test*", "allow"],
 	["cargo build*", "allow"],
 	["go test*", "allow"],
 	["go build*", "allow"],
-	["make", "allow"],
 	["make test*", "allow"],
 	["make build*", "allow"],
 	["make lint*", "allow"],
 	["make validate*", "allow"],
+	["just build", "allow"],
+	["just build *", "allow"],
+	["just validate", "allow"],
+	["just validate *", "allow"],
+	["just test", "allow"],
+	["just test *", "allow"],
 ]
 
-// --- Git write -----------------------------------------------------------
-
-// Mutating git operations. Reserved for the single agent that owns history.
+// Mutating git operations.
 _gitWrite: [
 	["git add *", "allow"],
 	["git commit *", "allow"],
 	["git checkout *", "allow"],
 	["git switch *", "allow"],
+	["git branch *", "allow"],
 	["git stash*", "allow"],
 	["git merge*", "allow"],
 	["git worktree*", "allow"],
@@ -153,36 +161,149 @@ _gitWrite: [
 	["git push*", "ask"],
 ]
 
-// --- Azure DevOps --------------------------------------------------------
-
-// Read-only ADO/auth.
 _azRead: [
 	["az account show*", "allow"],
-	["az login*", "allow"],
-	["az devops configure*", "allow"],
+	["az account list*", "allow"],
+	["az devops project list*", "allow"],
+	["az devops project show*", "allow"],
 	["az boards query*", "allow"],
 	["az boards work-item show*", "allow"],
-	["az boards work-item relation list*", "allow"],
+	["az boards work-item relation show*", "allow"],
 	["az repos pr list*", "allow"],
 	["az repos pr show*", "allow"],
-	["az devops invoke*", "allow"],
+	["az repos show*", "allow"],
+	["az repos list*", "allow"],
+	["az repos ref list*", "allow"],
+	["az repos pr reviewer list*", "allow"],
+	["az repos pr policy list*", "allow"],
+	["az repos pr work-item list*", "allow"],
 ]
 
-// Mutating ADO. PR creation asks; it is externally visible.
+// Credentials and persistent CLI defaults are not read-only operations.
+_azAuth: [
+	["az login*", "ask"],
+	["az logout*", "ask"],
+	["az account set*", "ask"],
+	["az devops login*", "ask"],
+	["az devops logout*", "ask"],
+	["az devops configure*", "ask"],
+	["az config set*", "ask"],
+	["az config unset*", "ask"],
+]
+
+// Externally visible mutations require confirmation, including generic APIs
+// with any method spelling (--http-method, --method, -X, or implicit writes).
 _azWrite: [
-	["az boards work-item update*", "allow"],
-	["az boards work-item relation add*", "allow"],
+	["az boards work-item create*", "ask"],
+	["az boards work-item delete*", "ask"],
+	["az boards work-item update*", "ask"],
+	["az boards work-item relation add*", "ask"],
+	["az boards work-item relation remove*", "ask"],
 	["az repos pr create*", "ask"],
-	["az repos pr update*", "allow"],
-	["az repos pr reviewer add*", "allow"],
+	["az repos pr update*", "ask"],
+	["az repos pr set-vote*", "ask"],
+	["az repos pr reviewer add*", "ask"],
+	["az repos pr reviewer remove*", "ask"],
+	["az repos pr policy queue*", "ask"],
+	["az repos pr work-item add*", "ask"],
+	["az repos pr work-item remove*", "ask"],
+	["az repos create*", "ask"],
+	["az repos delete*", "ask"],
+	["az repos update*", "ask"],
+	["az repos import create*", "ask"],
+	["az repos ref create*", "ask"],
+	["az repos ref delete*", "ask"],
+	["az devops invoke*", "ask"],
 ]
 
-// --- Safety guards -------------------------------------------------------
+// Narrow inspection commands only; notably no `gh api` or `gh auth token`.
+_ghRead: [
+	["gh auth status*", "allow"],
+	["gh repo view*", "allow"],
+	["gh repo list*", "allow"],
+	["gh issue list*", "allow"],
+	["gh issue view*", "allow"],
+	["gh issue status*", "allow"],
+	["gh pr list*", "allow"],
+	["gh pr view*", "allow"],
+	["gh pr status*", "allow"],
+	["gh pr diff*", "allow"],
+	["gh pr checks*", "allow"],
+	["gh run list*", "allow"],
+	["gh run view*", "allow"],
+	["gh workflow list*", "allow"],
+	["gh workflow view*", "allow"],
+	["gh release list*", "allow"],
+	["gh release view*", "allow"],
+	// Status disclosure flags are not inspection. Keep these narrowing rules
+	// after the broad status allowance; substrings cover scoped and =value forms.
+	["gh auth status*--show-token*", "deny"],
+	["gh auth status*-t*", "deny"],
+]
 
-// Blocks machine-wide mutation and network fetches. Intended for agents that
-// run with a permissive bash baseline (i.e. the developer), where the risk is
-// not reading the wrong file but changing the host. Place LAST so these denies
-// beat any earlier allow.
+// Credential operations require confirmation.
+_ghAuth: [
+	["gh auth login*", "ask"],
+	["gh auth logout*", "ask"],
+	["gh auth refresh*", "ask"],
+	["gh auth setup-git*", "ask"],
+	["gh auth switch*", "ask"],
+	["gh auth token*", "ask"],
+	["gh config *", "ask"],
+]
+
+_ghWrite: [
+	["gh issue create*", "ask"],
+	["gh issue edit*", "ask"],
+	["gh issue comment*", "ask"],
+	["gh issue close*", "ask"],
+	["gh issue reopen*", "ask"],
+	["gh issue delete*", "ask"],
+	["gh issue transfer*", "ask"],
+	["gh issue pin*", "ask"],
+	["gh issue unpin*", "ask"],
+	["gh issue lock*", "ask"],
+	["gh issue unlock*", "ask"],
+	["gh pr create*", "ask"],
+	["gh pr edit*", "ask"],
+	["gh pr comment*", "ask"],
+	["gh pr close*", "ask"],
+	["gh pr reopen*", "ask"],
+	["gh pr merge*", "ask"],
+	["gh pr review*", "ask"],
+	["gh pr ready*", "ask"],
+	["gh pr lock*", "ask"],
+	["gh pr unlock*", "ask"],
+	["gh pr update-branch*", "ask"],
+	["gh repo create*", "ask"],
+	["gh repo edit*", "ask"],
+	["gh repo delete*", "ask"],
+	["gh repo fork*", "ask"],
+	["gh repo rename*", "ask"],
+	["gh repo archive*", "ask"],
+	["gh repo unarchive*", "ask"],
+	["gh repo sync*", "ask"],
+	["gh release create*", "ask"],
+	["gh release edit*", "ask"],
+	["gh release delete*", "ask"],
+	["gh release upload*", "ask"],
+	["gh workflow run*", "ask"],
+	["gh workflow enable*", "ask"],
+	["gh workflow disable*", "ask"],
+	["gh run rerun*", "ask"],
+	["gh run cancel*", "ask"],
+	["gh run delete*", "ask"],
+	["gh api*", "ask"],
+]
+
+// For strictly read-only roles, append after any provider fragments. Raw APIs
+// can mutate via methods, form fields, or GraphQL; even GET is not inferred safe.
+_denyForgeApi: [
+	["az devops invoke*", "deny"],
+	["gh api*", "deny"],
+]
+
+// Blocks machine-wide mutation and network fetches.
 _denyGlobalMutation: [
 	["npm install -g*", "deny"],
 	["npm i -g*", "deny"],
@@ -205,6 +326,10 @@ _denyGlobalMutation: [
 	["ssh*", "deny"],
 	["scp*", "deny"],
 	["nc*", "deny"],
+	// Broad developer baselines must not bypass network/auth guards via runners.
+	for cmd in ["curl", "wget", "ssh", "scp", "nc", "sudo"] {
+		["* \(cmd)*", "deny"]
+	},
 	["rm -rf /*", "deny"],
 	["rm -rf ~*", "deny"],
 	["chmod 777*", "deny"],
@@ -215,27 +340,24 @@ _denyGlobalMutation: [
 	["reboot*", "deny"],
 ]
 
-// Denies every git subcommand. The pipeline funnels all history mutation
-// through one agent; this keeps the others out.
-//
-// NOTE: this is a guardrail, not a security boundary. `command git`, an
-// absolute path, or a subprocess call from a test script can still reach git.
-// It prevents casual and accidental use, not deliberate evasion.
+// Denies every git subcommand, including uv/bun/pnpm/npx/command wrappers.
 _denyGit: [
 	["git*", "deny"],
+	["* git *", "deny"],
+	["* git", "deny"],
 ]
 
-// Denies forge/issue-tracker CLIs. These have side effects visible outside the
-// repo (work item state, PR creation), which belong to the orchestrator alone.
+// Conservative token guards cover routine wrappers, raw APIs, and auth alike.
 _denyForgeCli: [
 	["az*", "deny"],
 	["gh*", "deny"],
-	["glab*", "deny"],
+	["* az *", "deny"],
+	["* az", "deny"],
+	["* gh *", "deny"],
+	["* gh", "deny"],
 ]
 
-// Denies infrastructure mutation. Separate from _denyForgeCli so a pipeline
-// that legitimately needs containers (e.g. testcontainers-based integration
-// tests) can omit just this fragment.
+// Denies infrastructure mutation.
 _denyInfra: [
 	["docker*", "deny"],
 	["kubectl*", "deny"],

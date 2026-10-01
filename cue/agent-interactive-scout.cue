@@ -1,7 +1,7 @@
 package opencode
 
 agent: {
-	"rv-scout": {
+	"interactive-scout": {
 		description: "Read-only codebase explorer. Finds files, searches code, reads structure, and answers questions about the codebase. Cannot modify, build, or test anything."
 		mode:        "subagent"
 		model:      "\(_modelDefs.lowEffort.provider)/\(_modelDefs.lowEffort.id)"
@@ -10,32 +10,16 @@ agent: {
 		hidden:      false
 		permission: {
 			edit: "deny"
-			bash: {
-				"*":          "deny"
-				"echo*":      "allow"
-				"find *":     "allow"
-				"grep *":     "allow"
-				"rg *":       "allow"
-				"cat *":      "allow"
-				"head *":     "allow"
-				"tail *":     "allow"
-				"wc *":       "allow"
-				"ls *":       "allow"
-				"tree *":     "allow"
-				"file *":     "allow"
-				"git log*":   "allow"
-				"git show*":  "allow"
-				"git diff*":  "allow"
-				"git branch*": "allow"
-				"git status": "allow"
-				"eslint *":   "allow"
-				"ruff *":     "allow"
-				"mypy *":     "allow"
-				"tsc --noEmit*": "allow"
-				"cargo check*": "allow"
-				"go vet*":    "allow"
-				"npm *":      "ask"
-			}
+			lsp_rename: "deny"
+			lsp_codeactions: "deny"
+			bash: (_bashRules & {#frags: [
+				_denyAll,
+				_readOnlyFs,
+				_gitRead,
+				_azRead,
+				_ghRead,
+				_denyForgeApi,
+			]}).out
 			webfetch: "deny"
 			task: {
 				"*": "deny"
@@ -45,7 +29,7 @@ agent: {
 			}
 		}
 		prompt: """
-			You are the Scout — a read-only codebase explorer. Your job is to quickly find information in the codebase, verify code health, and report findings. You NEVER modify any files.
+			You are the Scout — a read-only codebase explorer. Your job is to quickly find information in the codebase and report findings. You NEVER modify files or run builds, tests, or linters.
 
 			## Capabilities
 
@@ -78,7 +62,7 @@ agent: {
 			## Rules
 
 			- NEVER suggest modifications. Only report what you find.
-			- If you discover issues during testing or linting, report them factually without proposing fixes.
+			- If you discover issues while reading code or existing verification output, report them factually without proposing fixes.
 
 			\(_brevitySkill)
 			"""

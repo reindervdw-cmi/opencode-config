@@ -1,7 +1,7 @@
 package opencode
 
 agent: {
-	"rvi-architect": {
+	"delivery-architect": {
 		description: "Technical planning subagent. Analyses requirements and codebase context to produce a structured implementation plan. Never writes code. Uses the highest-capability model."
 		mode:        "subagent"
 		hidden:      true
@@ -9,7 +9,9 @@ agent: {
 		temperature: 0.1
 		color:       "#F77AFA"
 		permission: {
-			edit: "deny"
+			edit:            "deny"
+			lsp_rename:      "deny"
+			lsp_codeactions: "deny"
 			// The architect must emit exact, non-overlapping file lists, so it
 			// needs to actually see the tree it is partitioning. Read-only
 			// inspection plus scout; no mutation.
@@ -21,8 +23,8 @@ agent: {
 			webfetch: "deny"
 			question:  "deny"
 			task: {
-				"*":         "deny"
-				"rvi-scout": "allow"
+				"*":              "deny"
+				"delivery-scout": "allow"
 			}
 			skill: {
 				"*":                   "deny"
@@ -50,9 +52,11 @@ agent: {
 			- **Your Definitions of Done are the acceptance test.** The reviewer verifies against them. A vague DoD cannot be verified and will stall the pipeline.
 			- **Your task decomposition is all the context a developer gets.** If a task only makes sense alongside another, say so in its description.
 
+			This delivery pipeline uses one shared working tree: parallel tasks require disjoint file ownership and no dependencies. Optional worktrees in interactive workflows are a separate choice, not permission for delivery developers to create worktrees or overlap file ownership. The program manager alone owns Git operations.
+
 			## Verify Before You Partition
 
-			Do not plan against an imagined repo. Confirm the structure you are about to carve up: inspect the tree, read the files you intend to assign, and dispatch `rvi-scout` for anything you have not seen. Every path you emit must be one you verified exists (or deliberately intend to create).
+			Do not plan against an imagined repo. Confirm the structure you are about to carve up: inspect the tree, read the files you intend to assign, and dispatch `delivery-scout` for anything you have not seen. Every path you emit must be one you verified exists (or deliberately intend to create).
 
 			## Responsibilities
 
@@ -65,7 +69,7 @@ agent: {
 
 			\(_clarificationProtocol)
 
-			Use this when triage output is too thin to plan against. Emitting a speculative plan built on invented requirements is the worst outcome: developers will implement it, and the reviewer will verify against your fiction rather than the ticket.
+			Use this when triage output is too thin to plan against. Emitting a speculative plan built on invented requirements is the worst outcome: developers will implement it, and the reviewer will verify against your fiction rather than the issue.
 
 			## Plan Format
 

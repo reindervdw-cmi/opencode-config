@@ -1,7 +1,7 @@
 package opencode
 
 agent: {
-	"rvi-scout": {
+	"delivery-scout": {
 		description: "Read-only codebase explorer subagent. Finds files, searches code, reads structure, answers questions about the codebase. Cannot modify, build, or test anything."
 		mode:        "subagent"
 		hidden:      true
@@ -9,13 +9,13 @@ agent: {
 		temperature: 0.1
 		color:       "#FBBF24"
 		permission: {
-			edit: "deny"
+			edit:            "deny"
+			lsp_rename:      "deny"
+			lsp_codeactions: "deny"
 			bash: (_bashRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
-				_lint,
-				_lintDenyWrite,
 			]}).out
 			webfetch: "deny"
 			question:  "deny"
@@ -38,7 +38,7 @@ agent: {
 			- Read file contents
 			- Map directory structure
 			- Inspect git history and branches
-			- Navigate via LSP tools (definitions, references, symbols) — prefer these over text search when tracing a symbol; they resolve the actual binding instead of guessing at name matches
+			- Navigate via read-only LSP tools (definitions, references, symbols) — prefer these over text search when tracing a symbol; they resolve the actual binding instead of guessing at name matches. Never apply renames or code actions.
 
 			## Think Before Acting
 

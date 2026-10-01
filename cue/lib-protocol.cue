@@ -1,21 +1,7 @@
+// Shared prompt fragments for the delivery pipeline.
 package opencode
 
-// Shared prompt fragments for the rvi delivery pipeline.
-//
-// These exist because the plan schema, the status vocabulary, and the report
-// envelopes are CONTRACTS BETWEEN AGENTS. When each agent's prompt spelled out
-// its own copy, they drifted: the architect emitted `Test Strategy` / `Risks` /
-// `Rollback Plan` that the program manager's copy of the schema did not
-// mention, and the reviewer emitted lowercase `approved` while the program
-// manager branched on uppercase `APPROVED`.
-//
-// Defining each contract once and interpolating it into both the producer's and
-// the consumer's prompt makes drift impossible by construction.
 
-// --- Status vocabulary ---------------------------------------------------
-
-// Single source of truth for every status token in the pipeline. Referenced by
-// producers (who emit) and consumers (who branch on) these exact strings.
 _statusVocabulary: """
 	## Status Vocabulary
 
@@ -40,12 +26,7 @@ _statusVocabulary: """
 	- `minor` — should fix eventually; does not block delivery.
 	"""
 
-// --- Clarification protocol ----------------------------------------------
-
-// Every agent that can be blocked by ambiguity gets this. Previously only the
-// developer and reviewer had a way to say "I don't have enough information";
-// the architect was told to emit a plan and nothing else, so when starved of
-// context its only option was to invent one.
+// Agents blocked by ambiguity use this envelope instead of inventing context.
 _clarificationProtocol: """
 	## When You Lack Information
 
@@ -81,13 +62,30 @@ _clarificationProtocol: """
 	Two-Strike Rule.
 	"""
 
-// --- Plan schema ---------------------------------------------------------
+// Provider-neutral identity passed unchanged through triage, planning, task
+// dispatch, and reporting. Consumers choose provider tooling, not this contract.
+_forgeContextSchema: """
+	## Forge Context
+	forge: [github | azure-devops | other | none]
+	host: [forge hostname; include organization/collection URL when applicable]
+	repository: [repository identity, e.g. owner/name; null if not applicable]
+	project: [project identity; null if provider has no project scope]
+	issue_id: [issue/work-item identifier; null if no linked issue]
+	issue_url: [canonical issue/work-item URL; null if no linked issue]
+	target_branch: [exact delivery base/PR target branch]
 
-// THE plan schema. Interpolated into the architect (producer) and the program
-// manager (consumer) so both always agree.
+	Carry this context unchanged in handoffs. Use explicit null for absent fields;
+	never invent identities or assume github.com, an organization, or a branch.
+	Resolve required unknowns with the clarification protocol before delivery.
+	This is identity/context, not authorization or a provider-specific command recipe.
+	"""
+
+// THE plan schema.
 _planSchema: """
 	```
 	--- BEGIN PLAN ---
+
+	\(_forgeContextSchema)
 
 	## Git Strategy
 	branch: [exact branch name, e.g. feature/1234-add-login]
@@ -129,12 +127,9 @@ _planSchema: """
 	```
 	"""
 
-// --- File ownership ------------------------------------------------------
-
 // Concurrency control for parallel developers. Rests on prompt compliance,
 // since all developers share one working tree and `edit` cannot be scoped
-// per-dispatch. Stated plainly so the model understands the actual stake:
-// a stray write silently clobbers a peer.
+// per-dispatch.
 _fileOwnership: """
 	## File Ownership
 
@@ -142,13 +137,13 @@ _fileOwnership: """
 	how collisions are prevented. A write outside it can silently destroy
 	another agent's concurrent work — the loss is invisible until review.
 
-	**You own** the files in your assignment. Write them freely.
+	**You own** only explicitly assigned paths. Every path you create, modify,
+	delete, or rename must be listed, including tests and new files. Creating a
+	file yourself does not grant ownership or exempt later writes. A test
+	requirement does not authorize an unlisted test path.
+	This boundary also applies to shell commands and cross-file LSP actions.
 
-	**Also permitted**, no need to ask:
-	- Reading any file in the repo.
-	- Test files for code you own (`test_<mod>.py`, `<mod>.test.ts`, `<mod>_test.go`)
-	  even if not listed — tests are required by your DoD and are never shared.
-	- Files you created yourself during this task.
+	**Also permitted**, no need to ask: reading any file in the repo.
 
 	**Stop and report** — do not edit — for anything else, specifically:
 	- Source files owned by another task.
@@ -161,8 +156,6 @@ _fileOwnership: """
 	`INCOMPLETE` naming the file and why. Do not silently expand your scope.
 	"""
 
-// --- Reporting -----------------------------------------------------------
-
 // Developer completion report. Read by the program manager, QA, and reviewer.
 _developerReport: """
 	## Completion Report
@@ -172,6 +165,8 @@ _developerReport: """
 	```
 	--- BEGIN REPORT ---
 	status: COMPLETE | INCOMPLETE | BLOCKED
+
+	forge_context: [copy supplied Forge Context fields unchanged; do not infer missing values]
 
 	files_modified:
 	  - path: [path]
@@ -210,10 +205,6 @@ _developerReport: """
 	without running it.
 	"""
 
-// --- Evidence standard ---------------------------------------------------
-
-// For QA and the reviewer. The pipeline can open a PR autonomously, so a
-// hallucinated "looks good" has real consequences.
 _evidenceStandard: """
 	## Evidence Standard
 
@@ -229,11 +220,6 @@ _evidenceStandard: """
 	- Do not invent issues to appear thorough. A clean check is a useful result.
 	"""
 
-// --- Sandbox awareness ---------------------------------------------------
-
-// Injected into every agent. Prevents agents from misreading missing files as
-// a codebase problem (bad import, deleted file) when the real cause is that
-// the sandbox has not exposed that path.
 _sandboxNote: """
 	## Sandbox Environment
 

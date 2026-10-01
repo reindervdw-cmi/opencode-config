@@ -1,28 +1,33 @@
 package opencode
 
 agent: {
-	"rv-reviewer": {
+	"interactive-reviewer": {
 		description: "Reviews all changes against the plan's definitions of done. Checks for logical errors, missing pieces, test coverage, and code quality. Cannot modify files."
 		mode:        "all"
-		model:      "\(_modelDefs.highEffort.provider)/\(_modelDefs.midEffort.id)"
+		model:      "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
 		temperature: 0.1
 		color:       "#F472B6"
 		permission: {
 			edit: "deny"
-			bash: {
-				"*":                 "allow"
-                "git*":              "deny"
-				"git diff*":         "allow"
-				"git log*":          "allow"
-				"git show*":         "allow"
-				"git status*":       "allow"
-				"git merge-base*":   "allow"
-				"git rev-parse*":    "allow"
-			}
+			lsp_rename: "deny"
+			lsp_codeactions: "deny"
+			// Verification may create build/test artifacts, never source edits.
+			bash: (_bashRules & {#frags: [
+				_denyAll,
+				_readOnlyFs,
+				_gitRead,
+				_azRead,
+				_ghRead,
+				_lint,
+				_testRun,
+				_lintDenyWrite,
+				_denyForgeApi,
+				_denyGlobalMutation,
+			]}).out
 			webfetch: "deny"
 			task: {
 				"*":        "deny"
-				"rv-scout": "allow"
+				"interactive-scout": "allow"
 			}
 			skill: {
 				"*": "allow"
@@ -41,7 +46,7 @@ agent: {
 			## Workflow
 
 			1. Read the request; sometimes this may come directly from the user without a specific DoD. In those cases, feel free to ask for clarifications until you have enough information to review.
-			2. Inspect actual changes (git diff, file reading, `scout` subagent)
+			2. Inspect actual changes (git diff, file reading, `interactive-scout` subagent)
 			3. Verify each DoD item independently
 			4. Check for issues beyond DoD
 			5. Produce review report
@@ -96,6 +101,7 @@ agent: {
 			- Distinguish critical (must fix) vs minor (nice to fix)
 			- Reference file paths and line numbers
 			- Use LSP tools to trace symbol usage when needed
+			- Run verification commands yourself; report commands and actual results. Never use fix/format flags, LSP mutations, or commands that edit source files. Build/test artifacts are permitted; if verification requires source edits, request an `interactive-developer` corrective task.
 
 			\(_brevitySkill)
 			"""

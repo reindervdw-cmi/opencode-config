@@ -1,7 +1,7 @@
 package opencode
 
 agent: {
-	"rvi-qa": {
+	"delivery-qa": {
 		description: "Cheap pre-review validation layer. Inspects test coverage, scans for TODOs/FIXMEs, checks obvious bugs and type safety issues. Catches easy problems before the reviewer spends tokens on them."
 		mode:        "subagent"
 		hidden:      true
@@ -9,7 +9,9 @@ agent: {
 		temperature: 0.1
 		color:       "#FB923C"
 		permission: {
-			edit: "deny"
+			edit:            "deny"
+			lsp_rename:      "deny"
+			lsp_codeactions: "deny"
 			bash: (_bashRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
