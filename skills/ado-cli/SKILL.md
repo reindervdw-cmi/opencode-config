@@ -36,12 +36,12 @@ not proof of Azure DevOps access; a scoped intake read verifies access.
 az account show --output json
 ```
 
-If login is needed, ask manager/user for approval and tenant, then use device
+If login use device
 code in headless sessions. Never trigger bare browser-based `az login` or log
 tokens. Reuse resulting cache across calls; do not log in per command.
 
 ```bash
-az login --tenant "$TENANT" --use-device-code --allow-no-subscriptions --output none
+az login  --use-device-code --allow-no-subscriptions --output none
 ```
 
 Existing approved PAT/environment auth may be reused; do not request broader
@@ -166,7 +166,7 @@ permission. Posting status is a write, not part of read-only reporting.
 
 Review installed `--help` before execution; help requires no live mutations.
 Azure CLI help confirms command flags, not server process rules or API routing.
-Comments list reference: https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/comments/get-comments?view=azure-devops-rest-7.1
+Comments list reference: <https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/comments/get-comments?view=azure-devops-rest-7.1>
 uses `7.1-preview.4`; confirm deployed API/resource compatibility where possible.
 Unavailable CLI/docs/network or denied permissions are bounded verification
 limits: label unverified details and ask manager for missing context.
