@@ -1,4 +1,6 @@
 # Installed dependencies and local runtime state, never distribution inputs.
+service.json
+cli.json
 node_modules/
 /context-mode/
 /bun.lock

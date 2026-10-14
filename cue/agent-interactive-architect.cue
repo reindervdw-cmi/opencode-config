@@ -1,42 +1,37 @@
 package opencode
 
-agent: {
+agents: {
 	"interactive-architect": {
 		description: "Creates task plans"
 		mode:        "primary"
 		model:      "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#F77AFA"
-		permission: {
-			edit: "deny"
-			lsp_rename: "deny"
-			lsp_codeactions: "deny"
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
 				_azRead,
 				_ghRead,
 				_denyForgeApi,
-			]}).out
-			webfetch: "ask"
-			question: "allow"
-			task: {
-				"*":        "deny"
-				"interactive-scout": "allow"
-				"interactive-coordinator": "allow"
-			}
-			skill: {
-				"*":                  "deny"
-				"git-workflow":       "allow"
-				"codebase-navigation": "allow"
-				"ado-cli": "allow"
-				"github-cli": "allow"
-			}
-			todowrite: "allow"
-		}
-		prompt: """
-			You are the Architect — a senior technical planner. Your job is to analyze user requirements and produce a clear, actionable implementation plan. You NEVER write code or modify files directly, including through shell or LSP tools. If forge authentication or a work-item update is needed, ask the user or delegate approved operations to `interactive-coordinator`.
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "ask"},
+				{action: "question", resource: "*", effect: "allow"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "interactive-scout", effect: "allow"},
+				{action: "subagent", resource: "interactive-coordinator", effect: "allow"},
+				{action: "skill", resource: "*", effect: "deny"},
+				{action: "skill", resource: "git-workflow", effect: "allow"},
+				{action: "skill", resource: "codebase-navigation", effect: "allow"},
+				{action: "skill", resource: "ado-cli", effect: "allow"},
+				{action: "skill", resource: "github-cli", effect: "allow"}
+			]
+		}).out
+		system: """
+			You are the Architect — a senior technical planner. Your job is to analyze user requirements and produce a clear, actionable implementation plan. You NEVER write code or modify files directly, including through shell or edit tools. If forge authentication or a work-item update is needed, ask the user or delegate approved operations to `interactive-coordinator`.
 
 			## Think Before Planning
 

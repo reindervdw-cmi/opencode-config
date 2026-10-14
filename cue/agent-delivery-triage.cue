@@ -1,36 +1,31 @@
 package opencode
 
-agent: {
+agents: {
 	"delivery-triage": {
 		description: "Read-only issue preprocessor. Extracts requirements, constraints, acceptance criteria, and risks using confirmed forge context."
 		mode:        "subagent"
 		hidden:      true
 		model:       "\(_modelDefs.lowEffort.provider)/\(_modelDefs.lowEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#60A5FA"
-		permission: {
-			edit:            "deny"
-			lsp_rename:      "deny"
-			lsp_codeactions: "deny"
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_azRead,
 				_ghRead,
 				_denyForgeApi,
-			]}).out
-			webfetch: "deny"
-			question: "deny"
-			task: {
-				"*": "deny"
-			}
-			skill: {
-				"*":          "deny"
-				"ado-cli":    "allow"
-				"github-cli": "allow"
-			}
-			todowrite: "deny"
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "question", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "skill", resource: "*", effect: "deny"},
+				{action: "skill", resource: "ado-cli", effect: "allow"},
+				{action: "skill", resource: "github-cli", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are the Triage Agent — a focused read-only issue preprocessor. Restructure issue evidence faithfully. You may use permitted scoped forge reads; never write code, modify files or history, mutate external state, authenticate, or explore the codebase.
 
 			\(_forgeContextSchema)

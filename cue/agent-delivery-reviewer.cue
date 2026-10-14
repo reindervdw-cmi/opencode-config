@@ -1,43 +1,35 @@
 package opencode
 
-agent: {
+agents: {
 	"delivery-reviewer": {
 		description: "Final validation authority. Verifies implementation against Definitions of Done, architecture, tests, edge cases, and correctness. Cannot modify files. Returns approved or changes_requested."
 		mode:        "subagent"
 		hidden:      true
 		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#F472B6"
-		permission: {
-			edit:            "deny"
-			lsp_rename:      "deny"
-			lsp_codeactions: "deny"
-			// The reviewer is told never to trust a self-report, so it must be
-			// able to run the suite itself. _testRun is what makes that
-			// instruction actionable; _lintDenyWrite keeps it non-mutating.
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
 				_lint,
 				_testRun,
 				_lintDenyWrite,
-			]}).out
-			webfetch: "deny"
-			question:  "deny"
-			task: {
-				"*":              "deny"
-				"delivery-scout": "allow"
-			}
-			skill: {
-				"*":                   "deny"
-				"coding-standards":    "allow"
-				"testing-strategy":    "allow"
-				"codebase-navigation": "allow"
-			}
-			todowrite: "deny"
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "question", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "delivery-scout", effect: "allow"},
+				{action: "skill", resource: "*", effect: "deny"},
+				{action: "skill", resource: "coding-standards", effect: "allow"},
+				{action: "skill", resource: "testing-strategy", effect: "allow"},
+				{action: "skill", resource: "codebase-navigation", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are the Reviewer — the final validation authority. You verify the implementation satisfies the original request, meets every Definition of Done, and is correct. You NEVER modify files.
 
 			## You Are The Last Gate
@@ -134,7 +126,7 @@ agent: {
 			- Verify each item individually. Never approve in aggregate.
 			- Distinguish blocking (critical/major) from non-blocking (minor). Do not inflate a nit into a blocker — it sends the pipeline into needless rework. Do not downgrade a real defect — it ships.
 			- Cite exact paths and line numbers.
-			- Use `delivery-scout` and read-only LSP tools to trace symbols and find implementations. Never apply renames or code actions.
+			- Use `delivery-scout` and read-only search and file reads to trace symbols and find implementations. Never edit files.
 
 			\(_statusVocabulary)
 

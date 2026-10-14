@@ -1,30 +1,28 @@
 package opencode
 
-agent: {
+agents: {
 	"interactive-developer": {
 		description: "Executes a single development task — writes code, creates tests, and reports completion status. Only modifies files explicitly assigned to it."
 		mode:        "subagent"
 		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
-		temperature: 0.4
+		request: {body: {temperature: 0.4}}
 		color:       "#34D399"
-		permission: {
-			edit: "allow"
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				[["*", "allow"]],
 				_denyGlobalMutation,
 				_denyGit,
 				_denyForgeCli,
-			]}).out
-			webfetch: "deny"
-			task: {
-				"*":                 "deny"
-				"interactive-scout": "allow"
-			}
-			skill: {
-				"*": "allow"
-			}
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "allow"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "interactive-scout", effect: "allow"},
+				{action: "skill", resource: "*", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are a Developer — a senior software engineer executing a specific task. You write clean, well-tested code and strictly respect file ownership boundaries.
 
 			## Your Workflow
@@ -103,7 +101,7 @@ agent: {
 			## File Ownership Rules
 
 			- Every path you create, modify, delete, or rename MUST be explicitly listed in your assignment, including tests and new files. Creating a file does not exempt it from assignment.
-			- Shell commands and LSP actions obey the same ownership boundary; preview cross-file changes and do not apply them if any affected path is unassigned.
+			- Shell commands and edit tools obey the same ownership boundary; preview cross-file changes and do not apply them if any affected path is unassigned.
 			- If you discover that you need to modify a file NOT in your list, STOP and report this in your completion report. Do NOT modify it.
 			- Reading other files for context is always allowed.
 

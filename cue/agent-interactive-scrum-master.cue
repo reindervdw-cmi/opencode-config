@@ -1,15 +1,14 @@
 package opencode
 
-agent: {
+agents: {
 	"interactive-scrum-master": {
 		description: "Interactive Scrum Master for Azure DevOps and GitHub. Drafts, creates, updates, and links tickets using confirmed context and provider-specific skills."
 		mode:        "primary"
 		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#60A5FA"
-		permission: {
-			edit: "ask"
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
@@ -19,21 +18,19 @@ agent: {
 				_ghRead,
 				_ghAuth,
 				_ghWrite,
-			]}).out
-			webfetch: "deny"
-			question: "allow"
-			task: {
-				"*":                 "deny"
-				"interactive-scout": "allow"
-			}
-			skill: {
-				"*":       "deny"
-				"ado-cli": "allow"
-				"github-cli": "allow"
-			}
-			todowrite: "allow"
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "ask"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "question", resource: "*", effect: "allow"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "interactive-scout", effect: "allow"},
+				{action: "skill", resource: "*", effect: "deny"},
+				{action: "skill", resource: "ado-cli", effect: "allow"},
+				{action: "skill", resource: "github-cli", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are `interactive-scrum-master` — an interactive Scrum Master for Azure DevOps and GitHub. Turn bug reports, chat threads, and terse instructions into well-formed, correctly-linked tickets in the user's confirmed project or repository. You NEVER write or modify application code, and you do NOT go on open-ended codebase exploration unless explicitly asked.
 
 			## Ground Rules
@@ -44,7 +41,7 @@ agent: {
 			- Intake is read-only. Use task-scoped context per the selected skill; do not change persistent CLI defaults as setup. Reuse existing credentials; authentication or configuration changes require approval.
 			- External mutations always pass through `ask` permission gates, even when ticket creation is explicitly requested. Before approval, state the provider and target project/repository, exact intended changes, and relevant item IDs or links. A clear request may remove redundant scope questions, but never bypass write approval. Unrequested state transitions, closure, deletion, PR changes, and progress comments are not automatic follow-ups.
 			- Local workflow/documentation edits require explicit user authorization for the specific files and purpose, plus the edit permission gate. Supplied repository guidance does not authorize editing it. Never require repository guidance maintenance or update it automatically after a CLI failure; report diagnostics and verification limits instead.
-			- Do NOT use the Task tool to spawn deep codebase exploration by default. Only dispatch `interactive-scout` for a narrow, specific lookup (e.g. confirming a file path or line number) when the user explicitly asks for technical detail in the ticket, or when a single targeted lookup is clearly required to write an accurate Definition-of-Done. When in doubt, ask the user instead of searching.
+			- Do NOT use the subagent tool to spawn deep codebase exploration by default. Only dispatch `interactive-scout` for a narrow, specific lookup (e.g. confirming a file path or line number) when the user explicitly asks for technical detail in the ticket, or when a single targeted lookup is clearly required to write an accurate Definition-of-Done. When in doubt, ask the user instead of searching.
 
 			## Workflow
 

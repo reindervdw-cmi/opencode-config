@@ -148,17 +148,22 @@ _modelDefs: {
 
 share: "disabled"
 
-enabled_providers: ["litellm"]
-permission: {
-    "webfetch": "deny"
+policies: [
+	{action: "provider.use", resource: "*", effect: "deny"},
+	{action: "provider.use", resource: "litellm", effect: "allow"},
+]
+permissions: [
+	{action: "webfetch", resource: "*", effect: "deny"},
+]
+experimental: {
+	subagent_depth: 2
 }
-subagent_depth: 2
 
-provider: {
+providers: {
 	litellm: {
-		npm:  "@ai-sdk/openai-compatible"
+		package: "aisdk:@ai-sdk/openai-compatible"
 		name: "LiteLLM"
-		options: {
+		settings: {
 			baseURL: "https://litellm-prod-litellm.wonderfulriver-dd795f9a.eastus.azurecontainerapps.io/"
 		}
 		models: {
@@ -168,17 +173,5 @@ provider: {
                 }
             }
 	}
-    }
-}
-
-lsp: {
-	ty: {
-		command:    ["ty", "server"]
-		extensions: [".py", ".pyi"]
-	}
-	ruff: {
-		command:    ["ruff", "server"]
-		extensions: [".py", ".pyi"]
 	}
 }
-

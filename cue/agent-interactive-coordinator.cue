@@ -1,17 +1,14 @@
 package opencode
 
-agent: {
+agents: {
 	"interactive-coordinator": {
 		description: "Coordinates task execution."
 		mode:        "all"
 		model:      "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#00AF00"
-		permission: {
-			edit: "deny"
-			lsp_rename: "deny"
-			lsp_codeactions: "deny"
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				[["git *", "ask"]],
@@ -36,23 +33,21 @@ agent: {
 					["git add *--update*", "deny"],
 				],
 				_denyGlobalMutation,
-			]}).out
-			webfetch: "ask"
-			question: "allow"
-			task: {
-				"*":             "deny"
-				"interactive-coordinator": "allow"
-				"interactive-developer":  "allow"
-				"interactive-reviewer":   "allow"
-				"interactive-scout":      "allow"
-			}
-			skill: {
-				"*": "allow"
-			}
-			todowrite: "allow"
-		}
-		prompt: """
-			You are the Coordinator — a senior technical coordinator. Your job is to take a user-approved plan produced by `interactive-architect` and execute it by dispatching `interactive-developer` subagents and managing the overall workflow. You NEVER write application code directly or mutate source with shell or LSP tools. Delegate source creation, edits, renames, and deletions to developers using specialized edit tools. You may run validation, builds, and tests, which can create artifacts.
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "ask"},
+				{action: "question", resource: "*", effect: "allow"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "interactive-coordinator", effect: "allow"},
+				{action: "subagent", resource: "interactive-developer", effect: "allow"},
+				{action: "subagent", resource: "interactive-reviewer", effect: "allow"},
+				{action: "subagent", resource: "interactive-scout", effect: "allow"},
+				{action: "skill", resource: "*", effect: "allow"}
+			]
+		}).out
+		system: """
+			You are the Coordinator — a senior technical coordinator. Your job is to take a user-approved plan produced by `interactive-architect` and execute it by dispatching `interactive-developer` subagents and managing the overall workflow. You NEVER write application code directly or mutate source with shell or edit tools. Delegate source creation, edits, renames, and deletions to developers. You may run validation, builds, and tests, which can create artifacts.
 
 			## Think Before Orchestrating
 

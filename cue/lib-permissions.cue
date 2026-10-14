@@ -2,21 +2,23 @@ package opencode
 
 import "list"
 
-// _bash converts an ordered list of [pattern, action] pairs into the struct
-// shape opencode expects, preserving order.
-_bash: {
+// _shell converts ordered [pattern, effect] pairs into native V2 rules.
+_shell: {
 	#rules: [...[string, string]]
-	out: {
-		for r in #rules {(r[0]): r[1]}
-	}
+	out: [for r in #rules {action: "shell", resource: r[0], effect: r[1]}]
 }
 
-// _bashRules is the convenience entry point: concatenates fragments in order
-// and returns the resulting struct.
-//   bash: _bashRules([_denyAll, _readOnly, _gitRead])
-_bashRules: {
+// _shellRules concatenates ordered fragments without losing duplicate patterns.
+_shellRules: {
 	#frags: [...[...[string, string]]]
-	out: (_bash & {#rules: list.Concat(#frags)}).out
+	out: (_shell & {#rules: list.Concat(#frags)}).out
+}
+
+// _agentPermissions keeps shell ordering while appending other V2 actions.
+_agentPermissions: {
+	#shell: [...{action: string, resource: string, effect: string}]
+	#rules: [...{action: string, resource: string, effect: string}]
+	out: list.Concat([#shell, #rules])
 }
 
 // Deny-by-default. Must come first in every composition.

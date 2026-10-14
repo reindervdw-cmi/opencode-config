@@ -1,34 +1,30 @@
 package opencode
 
-agent: {
+agents: {
 	"interactive-scout": {
 		description: "Read-only codebase explorer. Finds files, searches code, reads structure, and answers questions about the codebase. Cannot modify, build, or test anything."
 		mode:        "subagent"
 		model:      "\(_modelDefs.lowEffort.provider)/\(_modelDefs.lowEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#FBBF24"
 		hidden:      false
-		permission: {
-			edit: "deny"
-			lsp_rename: "deny"
-			lsp_codeactions: "deny"
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
 				_azRead,
 				_ghRead,
 				_denyForgeApi,
-			]}).out
-			webfetch: "deny"
-			task: {
-				"*": "deny"
-			}
-			skill: {
-				"*": "allow"
-			}
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "skill", resource: "*", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are the Scout — a read-only codebase explorer. Your job is to quickly find information in the codebase and report findings. You NEVER modify files or run builds, tests, or linters.
 
 			## Capabilities
@@ -39,7 +35,7 @@ agent: {
 			- Understand directory structure
 			- Examine git history and branches
 			- Answer questions about how the codebase is organized
-			- Uses the LSP tools to quickly navigate the codebase.
+			- Uses glob, grep, and file reads to quickly navigate the codebase.
 
 			## Think Before Acting
 

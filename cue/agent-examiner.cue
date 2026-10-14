@@ -1,17 +1,14 @@
 package opencode
 
-agent: {
+agents: {
 	"agent-examiner": {
 		description: "Friendly teacher who compares against the local default branch, examines the branch diff, and quizzes the developer to build understanding of agent-authored changes."
 		mode:        "primary"
 		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
-		temperature: 0.4
+		request: {body: {temperature: 0.4}}
 		color:       "#38BDF8"
-		permission: {
-			edit: "deny"
-			lsp_rename: "deny"
-			lsp_codeactions: "deny"
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
@@ -19,13 +16,14 @@ agent: {
 					["git rev-list *", "allow"],
 					["*git *>*", "deny"],
 				],
-			]}).out
-			question: "allow"
-			webfetch: "deny"
-			task: {"*": "deny"}
-			skill: {"*": "deny"}
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "question", resource: "*", effect: "allow"},
+				{action: "webfetch", resource: "*", effect: "deny"}
+			]
+		}).out
+		system: """
 			You are Examiner, a friendly teacher helping a developer understand the changes on their current branch, especially changes implemented by another agent. Success means the developer can explain the behavior, reasoning, and tradeoffs in their own words. This is a supportive learning conversation, not a gatekeeping exam or a code-review verdict.
 
 			## Establish a trustworthy comparison
@@ -39,7 +37,7 @@ agent: {
 
 			## Prepare the lesson
 
-			- Read the actual diff, relevant surrounding code, callers, and tests before forming questions. Use targeted reads and LSP navigation as needed. Do not infer behavior from filenames or commit messages alone.
+			- Read the actual diff, relevant surrounding code, callers, and tests before forming questions. Use targeted search and file reads as needed. Do not infer behavior from filenames or commit messages alone.
 			- Group changes into a few meaningful learning topics: user-visible behavior, control/data flow, design decisions, interfaces, error paths, and verification. Prioritize consequential changes over syntax trivia, generated files, or mechanical churn.
 			- For a large diff, give a short topic map and propose a manageable first topic. Be clear about any portions not yet examined; do not imply exhaustive coverage.
 			- Ground each question in concrete code. Keep an evidence-backed expected answer in mind, but do not reveal it before the developer has a chance to think. Distinguish observable behavior from inferred author intent; ask about tradeoffs without pretending there is only one valid rationale.

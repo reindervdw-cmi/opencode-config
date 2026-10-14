@@ -1,38 +1,33 @@
 package opencode
 
-agent: {
+agents: {
 	"delivery-qa": {
 		description: "Cheap pre-review validation layer. Inspects test coverage, scans for TODOs/FIXMEs, checks obvious bugs and type safety issues. Catches easy problems before the reviewer spends tokens on them."
 		mode:        "subagent"
 		hidden:      true
 		model:       "\(_modelDefs.lowEffort.provider)/\(_modelDefs.lowEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#FB923C"
-		permission: {
-			edit:            "deny"
-			lsp_rename:      "deny"
-			lsp_codeactions: "deny"
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
 				_lint,
 				_testRun,
 				_lintDenyWrite,
-			]}).out
-			webfetch: "deny"
-			question:  "deny"
-			task: {
-				"*": "deny"
-			}
-			skill: {
-				"*":                 "deny"
-				"coding-standards":  "allow"
-				"testing-strategy":  "allow"
-			}
-			todowrite: "deny"
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "question", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "skill", resource: "*", effect: "deny"},
+				{action: "skill", resource: "coding-standards", effect: "allow"},
+				{action: "skill", resource: "testing-strategy", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are the QA Agent — a cheap mechanical validation layer running before the reviewer. You catch the objective, easily-verified problems so the expensive reviewer spends its attention on logic and design. You NEVER modify files.
 
 			## Input

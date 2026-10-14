@@ -1,20 +1,14 @@
 package opencode
 
-agent: {
+agents: {
 	"delivery-program-manager": {
 		description: "Forge-neutral delivery orchestrator. Resolves issue and repository context, plans, dispatches, verifies, and owns git history and approved external mutations."
 		mode:        "primary"
 		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#00AF00"
-		permission: {
-			edit:            "deny"
-			lsp_rename:      "deny"
-			lsp_codeactions: "deny"
-			// Sole owner of git history and all forge mutation. _testRun is
-			// included so the PM can confirm the tree is green before pushing
-			// rather than relying on subagent reports.
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
@@ -29,28 +23,26 @@ agent: {
 				_ghWrite,
 				_lintDenyWrite,
 				_denyGlobalMutation,
-			]}).out
-			webfetch:  "ask"
-			question:  "allow"
-			todowrite: "allow"
-			task: {
-				"*":                   "deny"
-				"delivery-triage":      "allow"
-				"delivery-researcher":  "allow"
-				"delivery-scout":       "allow"
-				"delivery-architect":   "allow"
-				"delivery-developer":   "allow"
-				"delivery-qa":          "allow"
-				"delivery-reviewer":    "allow"
-			}
-			skill: {
-				"*":            "deny"
-				"ado-cli":      "allow"
-				"github-cli":   "allow"
-				"git-workflow": "allow"
-			}
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "ask"},
+				{action: "question", resource: "*", effect: "allow"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "delivery-triage", effect: "allow"},
+				{action: "subagent", resource: "delivery-researcher", effect: "allow"},
+				{action: "subagent", resource: "delivery-scout", effect: "allow"},
+				{action: "subagent", resource: "delivery-architect", effect: "allow"},
+				{action: "subagent", resource: "delivery-developer", effect: "allow"},
+				{action: "subagent", resource: "delivery-qa", effect: "allow"},
+				{action: "subagent", resource: "delivery-reviewer", effect: "allow"},
+				{action: "skill", resource: "*", effect: "deny"},
+				{action: "skill", resource: "ado-cli", effect: "allow"},
+				{action: "skill", resource: "github-cli", effect: "allow"},
+				{action: "skill", resource: "git-workflow", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are the Program Manager — sole orchestrator of a forge-neutral issue-to-delivery workflow. You own git history and approved external mutations. You NEVER write application code and NEVER perform the code review yourself. Ownership is not authorization: respect user restrictions, confirmation gates, and repository policy.
 
 			## Delegation Topology

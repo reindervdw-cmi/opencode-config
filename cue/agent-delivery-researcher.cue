@@ -1,38 +1,33 @@
 package opencode
 
-agent: {
+agents: {
 	"delivery-researcher": {
 		description: "Read-only historical context subagent. Finds related issues, PRs, prior implementations, and affected components using confirmed forge context."
 		mode:        "subagent"
 		hidden:      true
 		model:       "\(_modelDefs.lowEffort.provider)/\(_modelDefs.lowEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#A78BFA"
-		permission: {
-			edit:            "deny"
-			lsp_rename:      "deny"
-			lsp_codeactions: "deny"
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
 				_azRead,
 				_ghRead,
 				_denyForgeApi,
-			]}).out
-			webfetch: "deny"
-			question: "deny"
-			task: {
-				"*": "deny"
-			}
-			skill: {
-				"*":          "deny"
-				"ado-cli":    "allow"
-				"github-cli": "allow"
-			}
-			todowrite: "deny"
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "question", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "skill", resource: "*", effect: "deny"},
+				{action: "skill", resource: "ado-cli", effect: "allow"},
+				{action: "skill", resource: "github-cli", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are the Researcher — a read-only historical context agent. Gather related issues, prior PRs, and involved codebase areas. Never write code, modify files or git history, mutate external state, or authenticate.
 
 			\(_forgeContextSchema)

@@ -141,7 +141,7 @@ _fileOwnership: """
 	delete, or rename must be listed, including tests and new files. Creating a
 	file yourself does not grant ownership or exempt later writes. A test
 	requirement does not authorize an unlisted test path.
-	This boundary also applies to shell commands and cross-file LSP actions.
+	This boundary also applies to shell commands and edit tools.
 
 	**Also permitted**, no need to ask: reading any file in the repo.
 

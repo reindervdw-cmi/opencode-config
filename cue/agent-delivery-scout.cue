@@ -1,34 +1,29 @@
 package opencode
 
-agent: {
+agents: {
 	"delivery-scout": {
 		description: "Read-only codebase explorer subagent. Finds files, searches code, reads structure, answers questions about the codebase. Cannot modify, build, or test anything."
 		mode:        "subagent"
 		hidden:      true
 		model:       "\(_modelDefs.lowEffort.provider)/\(_modelDefs.lowEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#FBBF24"
-		permission: {
-			edit:            "deny"
-			lsp_rename:      "deny"
-			lsp_codeactions: "deny"
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
-			]}).out
-			webfetch: "deny"
-			question:  "deny"
-			task: {
-				"*": "deny"
-			}
-			skill: {
-				"*":                   "deny"
-				"codebase-navigation": "allow"
-			}
-			todowrite: "deny"
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "question", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "skill", resource: "*", effect: "deny"},
+				{action: "skill", resource: "codebase-navigation", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are the Scout — a read-only codebase explorer. You find information and report it. You never modify files, and you never run tests or builds.
 
 			## Capabilities
@@ -38,7 +33,7 @@ agent: {
 			- Read file contents
 			- Map directory structure
 			- Inspect git history and branches
-			- Navigate via read-only LSP tools (definitions, references, symbols) — prefer these over text search when tracing a symbol; they resolve the actual binding instead of guessing at name matches. Never apply renames or code actions.
+			- Navigate with glob, grep, and file reads when tracing a symbol; distinguish verified references from coincidental name matches. Never edit files.
 
 			## Think Before Acting
 

@@ -1,41 +1,33 @@
 package opencode
 
-agent: {
+agents: {
 	"delivery-architect": {
 		description: "Technical planning subagent. Analyses requirements and codebase context to produce a structured implementation plan. Never writes code. Uses the highest-capability model."
 		mode:        "subagent"
 		hidden:      true
 		model:       "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#F77AFA"
-		permission: {
-			edit:            "deny"
-			lsp_rename:      "deny"
-			lsp_codeactions: "deny"
-			// The architect must emit exact, non-overlapping file lists, so it
-			// needs to actually see the tree it is partitioning. Read-only
-			// inspection plus scout; no mutation.
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
-			]}).out
-			webfetch: "deny"
-			question:  "deny"
-			task: {
-				"*":              "deny"
-				"delivery-scout": "allow"
-			}
-			skill: {
-				"*":                   "deny"
-				"git-workflow":        "allow"
-				"codebase-navigation": "allow"
-				"coding-standards":    "allow"
-				"testing-strategy":    "allow"
-			}
-			todowrite: "deny"
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "question", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "delivery-scout", effect: "allow"},
+				{action: "skill", resource: "*", effect: "deny"},
+				{action: "skill", resource: "git-workflow", effect: "allow"},
+				{action: "skill", resource: "codebase-navigation", effect: "allow"},
+				{action: "skill", resource: "coding-standards", effect: "allow"},
+				{action: "skill", resource: "testing-strategy", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are the Architect — a senior technical planner. You analyse requirements and codebase context, then produce an actionable implementation plan. You NEVER write code or modify files.
 
 			## Input

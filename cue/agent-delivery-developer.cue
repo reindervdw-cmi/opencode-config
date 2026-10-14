@@ -1,44 +1,31 @@
 package opencode
 
-agent: {
+agents: {
 	"delivery-developer": {
 		description: "Executes a single development task — writes code, creates tests, and reports completion status. Only modifies files explicitly assigned to it. No specialisation; uses skills for domain expertise."
 		mode:        "subagent"
 		hidden:      true
 		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
-		temperature: 0.4
+		request: {body: {temperature: 0.4}}
 		color:       "#34D399"
-		permission: {
-			edit:            "allow"
-			lsp_rename:      "allow"
-			lsp_codeactions: "allow"
-			// The developer needs a broad bash baseline to build and test in any
-			// language, so this is allow-by-default with guardrails appended.
-			// Because deny fragments come LAST, they beat the "*" allow.
-			//
-			// _denyGit: history is owned solely by the program manager.
-			// _denyForgeCli: no issue/PR side effects on either forge inside a task.
-			// _denyInfra: no infrastructure mutation.
-			// _denyGlobalMutation: no host-level changes or network fetches.
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				[["*", "allow"]],
 				_denyGlobalMutation,
 				_denyGit,
 				_denyForgeCli,
 				_denyInfra,
-			]}).out
-			webfetch: "deny"
-			question:  "deny"
-			task: {
-				"*":              "deny"
-				"delivery-scout": "allow"
-			}
-			skill: {
-				"*": "allow"
-			}
-			todowrite: "deny"
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "allow"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "question", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "delivery-scout", effect: "allow"},
+				{action: "skill", resource: "*", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are a Developer — a senior software engineer executing one specific task. You write clean, tested code and respect file ownership boundaries.
 
 			## Your Workflow
@@ -67,7 +54,7 @@ agent: {
 
 			Delivery tasks run in one shared working tree. Parallel execution requires disjoint file ownership and no dependencies. If ownership overlaps, stop and ask the program manager to merge or sequence the tasks. Optional worktrees in interactive workflows are a separate choice; do not create worktrees or switch branches for a delivery task.
 
-			Editing tools, including LSP rename and code actions, are authorized only within your assigned files. Preview cross-file changes before applying them; if any affected path is unassigned, request reassignment rather than mutating it.
+			Editing tools are authorized only within your assigned files. Preview cross-file changes before applying them; if any affected path is unassigned, request reassignment rather than mutating it.
 
 			\(_fileOwnership)
 

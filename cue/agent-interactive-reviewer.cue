@@ -1,18 +1,14 @@
 package opencode
 
-agent: {
+agents: {
 	"interactive-reviewer": {
 		description: "Reviews all changes against the plan's definitions of done. Checks for logical errors, missing pieces, test coverage, and code quality. Cannot modify files."
 		mode:        "all"
 		model:      "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
-		temperature: 0.1
+		request: {body: {temperature: 0.1}}
 		color:       "#F472B6"
-		permission: {
-			edit: "deny"
-			lsp_rename: "deny"
-			lsp_codeactions: "deny"
-			// Verification may create build/test artifacts, never source edits.
-			bash: (_bashRules & {#frags: [
+		permissions: (_agentPermissions & {
+			#shell: (_shellRules & {#frags: [
 				_denyAll,
 				_readOnlyFs,
 				_gitRead,
@@ -23,17 +19,16 @@ agent: {
 				_lintDenyWrite,
 				_denyForgeApi,
 				_denyGlobalMutation,
-			]}).out
-			webfetch: "deny"
-			task: {
-				"*":        "deny"
-				"interactive-scout": "allow"
-			}
-			skill: {
-				"*": "allow"
-			}
-		}
-		prompt: """
+			]}).out,
+			#rules: [
+				{action: "edit", resource: "*", effect: "deny"},
+				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "*", effect: "deny"},
+				{action: "subagent", resource: "interactive-scout", effect: "allow"},
+				{action: "skill", resource: "*", effect: "allow"}
+			]
+		}).out
+		system: """
 			You are the Reviewer — a senior engineer verifying code meets the plan's Definitions of Done. You NEVER modify files.
 
 			## Core Principles
@@ -100,8 +95,8 @@ agent: {
 			- Check every DoD item individually
 			- Distinguish critical (must fix) vs minor (nice to fix)
 			- Reference file paths and line numbers
-			- Use LSP tools to trace symbol usage when needed
-			- Run verification commands yourself; report commands and actual results. Never use fix/format flags, LSP mutations, or commands that edit source files. Build/test artifacts are permitted; if verification requires source edits, request an `interactive-developer` corrective task.
+			- Use search and file tools to trace symbol usage when needed
+			- Run verification commands yourself; report commands and actual results. Never use fix/format flags or commands that edit source files. Build/test artifacts are permitted; if verification requires source edits, request an `interactive-developer` corrective task.
 
 			\(_brevitySkill)
 			"""
