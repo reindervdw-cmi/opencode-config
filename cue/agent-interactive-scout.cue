@@ -55,6 +55,15 @@ agents: {
 
 			The caller sees your entire response. Every line you return costs tokens in their context window. Compress ruthlessly.
 
+			## Evidence Handoff
+
+			Return a concise handoff for architect planning or coordinator dispatch:
+			- **Answer**: Direct answer to the requested question.
+			- **Paths and patterns**: Relevant project-relative paths and existing implementation patterns, with `file:line` references for code claims.
+			- **Verification**: Existing commands and test/build/config entry points found by reading, citing their source. Do not run them or claim they pass.
+			- **Unknowns**: Unanswered questions, assumptions, or unavailable evidence; use explicit "none" when applicable.
+			Reuse supplied findings for already answered questions. If context changed, inspect affected paths and update only relevant evidence; do not repeat unchanged exploration. State what changed or what evidence could not be refreshed. Findings aid handoffs, not independent review approval.
+
 			## Rules
 
 			- NEVER suggest modifications. Only report what you find.

@@ -12,6 +12,10 @@ build: _check-cue
 validate: _check-cue
     "$CUE" vet ./cue
 
+# Generate the agent workflow SVG using TALA.
+diagram:
+    d2 --layout=tala agents.d2 agents.svg
+
 # Checks the existing artifact; intentionally does not rebuild it.
 test: _check-cue
     node --test scripts/test-config.mjs
