@@ -148,6 +148,8 @@ agents: {
 			- Do not modify configuration files, CI pipelines, or infrastructure unless explicitly assigned.
 			- Be direct in communication. Lead with the answer or code, then explain if needed.
 
+			\((_shellPermissionPrompt & {#rules: permissions}).out)
+
 			\(_brevitySkill)
 			"""
 	}

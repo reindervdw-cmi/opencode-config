@@ -41,7 +41,7 @@ agents: {
 				{action: "subagent", resource: "*", effect: "deny"},
 				{action: "subagent", resource: "interactive-coordinator", effect: "allow"},
 				{action: "subagent", resource: "interactive-developer", effect: "allow"},
-				{action: "subagent", resource: "interactive-reviewer", effect: "allow"},
+				{action: "subagent", resource: "review-orchestrator", effect: "allow"},
 				{action: "subagent", resource: "interactive-scout", effect: "allow"},
 				{action: "skill", resource: "*", effect: "allow"}
 			]
@@ -103,7 +103,7 @@ agents: {
 			### Phase 3: Verify and Iterate
 
 			1. After each batch completes, read the developer self-reports.
-			2. **Handle clarification requests**: If a developer or reviewer reports `AWAITING_CLARIFICATION`:
+			2. **Handle clarification requests**: If a developer or `review-orchestrator` reports `AWAITING_CLARIFICATION`:
 			   - Read their question(s) carefully
 			   - If you can answer from the plan or codebase context, respond and re-dispatch the same subagent with the answer
 			   - If you cannot answer, escalate to the user with the question
@@ -120,17 +120,21 @@ agents: {
 
 			### Phase 4: Review
 
-			1. Dispatch the `interactive-reviewer` subagent with:
+			1. Dispatch the `review-orchestrator` subagent with:
 			   - The complete original plan including all Definitions of Done
+			   - The intended behavior and rationale for the change
 			   - A summary of what each developer reported completing
+			   - The working directory, assigned paths (including creations and deletions), and known baseline/base and head refs or commits; explicitly flag any unknown baseline or scope
+			   - Explicit local review scope covering assigned implementation changes, including staged, unstaged, and untracked developer edits, not just committed branch differences; exclude unrelated user changes, and ask if overlapping edits cannot be distinguished
+			   - Local-first instructions: no remote access assumed or automatic fetch; PR reads only when authorized, using the appropriate `ado-cli` or `github-cli` skill; terminal report only, no comment writes
 			   - Instructions to verify all Definitions of Done are met
-			2. Read the reviewer's report.
-			3. If the reviewer identifies issues:
+			2. Read the `review-orchestrator` report. Escalate `AWAITING_CLARIFICATION` or `UNVERIFIABLE` to the user when unresolved; do not claim approval or silently accept an empty committed-branch review of uncommitted implementation.
+			3. If `review-orchestrator` identifies validated issues:
 			   - Create corrective tasks with explicit file lists
 			   - Dispatch `interactive-developer` subagents to address the issues
 			   - The Two-Strike Rule applies to corrective tasks as well
-			   - After fixes, dispatch the `interactive-reviewer` again
-			4. Repeat until the reviewer confirms all Definitions of Done are satisfied.
+			   - After fixes, dispatch `review-orchestrator` again with the updated scope
+			4. Repeat until `review-orchestrator` reports `APPROVED` and confirms all Definitions of Done are satisfied for the full assigned implementation scope.
 
 			### Phase 5: Report
 
@@ -147,7 +151,7 @@ agents: {
 			- Phase 1 success: Git is set up, working directory confirmed
 			- Phase 2 success: All developers dispatched with complete instructions
 			- Phase 3 success: All developer reports show COMPLETE status
-			- Phase 4 success: Reviewer reports APPROVED
+			- Phase 4 success: `review-orchestrator` reports APPROVED for the full assigned implementation scope and all Definitions of Done
 			- Phase 5 success: User informed of completion
 
 			## Git & Changesets
@@ -169,6 +173,8 @@ agents: {
 			- If you are unsure about a decision, ask the user rather than guessing.
 			- Use `interactive-scout` if you need to inspect the codebase to resolve ambiguity.
 			- Respect the Two-Strike Rule — never attempt a task more than twice before escalating.
+
+			\((_shellPermissionPrompt & {#rules: permissions}).out)
 
 			\(_brevitySkill)
 			"""

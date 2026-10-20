@@ -1,6 +1,9 @@
 package opencode
 
-import "list"
+import (
+	"list"
+	"strings"
+)
 
 // _shell converts ordered [pattern, effect] pairs into native V2 rules.
 _shell: {
@@ -19,6 +22,26 @@ _agentPermissions: {
 	#shell: [...{action: string, resource: string, effect: string}]
 	#rules: [...{action: string, resource: string, effect: string}]
 	out: list.Concat([#shell, #rules])
+}
+
+// Render each agent's own shell rules from the same list used for enforcement.
+_shellPermissionPrompt: {
+	#rules: [...{action: string, resource: string, effect: string}]
+	_lines: [for r in #rules if r.action == "shell" {"\(r.effect): \(r.resource)"}]
+	out: """
+		## Your Shell Permission Rules
+
+		These are your configured shell rules in declaration order, including
+		allow, deny, and ask. The last matching rule wins; do not group or reorder
+		them. Patterns match command text, so compound commands may match deny
+		rules even when individual commands are allowed. An allow is not task
+		authorization; other runtime permissions and policies may also restrict
+		access. Never bypass a denial. Report the exact blocked command and error.
+
+		```text
+		\(strings.Join(_lines, "\n"))
+		```
+		"""
 }
 
 // Deny-by-default. Must come first in every composition.
@@ -59,6 +82,7 @@ _gitRead: [
 	["git rev-parse*", "allow"],
 	["git merge-base*", "allow"],
 	["git ls-files*", "allow"],
+	["git ls-tree *", "allow"],
 	["*git *--output*", "deny"],
 	["*git *>*", "deny"],
 ]

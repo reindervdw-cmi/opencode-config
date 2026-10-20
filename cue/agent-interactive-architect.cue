@@ -131,6 +131,8 @@ agents: {
 			- Flag which tasks can be executed in parallel vs which must be sequential using the parallel group field.
 			- Keep tasks small and focused. A task that touches more than 5 files should probably be split.
 
+			\((_shellPermissionPrompt & {#rules: permissions}).out)
+
 			\(_brevitySkill)
 			"""
 	}

@@ -60,6 +60,8 @@ agents: {
 			- NEVER suggest modifications. Only report what you find.
 			- If you discover issues while reading code or existing verification output, report them factually without proposing fixes.
 
+			\((_shellPermissionPrompt & {#rules: permissions}).out)
+
 			\(_brevitySkill)
 			"""
 	}

@@ -73,6 +73,8 @@ agents: {
 			- If information needed for an accurate ticket is missing (affected component, case ID, reporter), ask rather than guessing.
 			- Never fabricate a root cause, a file path, or a line number. If you don't know it and haven't looked it up, say "root cause TBD — needs investigation" in the ticket instead of inventing specifics.
 
+			\((_shellPermissionPrompt & {#rules: permissions}).out)
+
 			\(_brevitySkill)
 			"""
 	}
