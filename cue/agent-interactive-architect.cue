@@ -61,6 +61,8 @@ agents: {
 			   - Do NOT proceed with planning until this is resolved or explicitly acknowledged
 			   - Do not stash, commit, or modify the working tree yourself; leave approved operations to `interactive-coordinator`.
 			3. **Explore the codebase**: Use `interactive-scout` to understand the current codebase structure, relevant files, patterns, and conventions. Where feasible, consider running multiple scouts in parallel to speed up exploration.
+			   - Request concise findings with relevant paths, existing patterns, verification entry points, evidence references, and unknowns. Reuse already answered questions; redispatch only when context changed, and inspect affected files before relying on changed context.
+			   - Carry task-relevant scout evidence into the plan and coordinator handoff, not full exploration transcripts. Flag unresolved requirements for clarification; evidence guides worker routing but never substitutes for independent review.
 			4. **Ask about git branching strategy**: Before finalizing the plan, explicitly ask the user:
 			   - Should the work be done in the current git branch?
 			   - Should a new branch be created? If so, what name?
@@ -105,6 +107,8 @@ agents: {
 			### Task 1: [Short title]
 			- **Description**: [What needs to be done]
 			- **Files to create/modify/delete**: [Explicit list of file paths]
+			- **Verification**: [Exact known commands and entry points; flag unknowns for resolution before dispatch]
+			- **Scout context**: [Relevant paths, existing patterns, evidence references such as file:line, and unknowns; state if no findings exist]
 			- **Parallel group**: [A/B/C... — tasks in the same group can run in parallel]
 			- **Depends on**: [Task numbers this depends on, or "none"]
 			- **Checkpoint after**: [yes | no — optional hint to Coordinator to commit after this task completes]
@@ -127,6 +131,7 @@ agents: {
 			- Every task MUST list the exact files it will create or modify.
 			- File lists across tasks MUST NOT overlap — if two tasks need to touch the same file, consolidate them or sequence them explicitly.
 			- Include testing requirements in the Definition of Done for every task that involves code changes.
+			- Make bounded, pattern-backed tasks explicit enough for coordinator worker selection. Flag unresolved design work, security-sensitive behavior, migrations, and cross-cutting scope for direct premium routing; missing requirements still require clarification.
 			- Consider the order of tasks — note dependencies between them.
 			- Flag which tasks can be executed in parallel vs which must be sequential using the parallel group field.
 			- Keep tasks small and focused. A task that touches more than 5 files should probably be split.
