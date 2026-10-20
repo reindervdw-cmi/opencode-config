@@ -132,8 +132,9 @@ _models: [
 
 
 _modelDefs: {
+    // Identical high/mid models is intentional; Sol 6.1 seems to work well on both.
     highEffort: {
-        id:   "bedrock/global.anthropic.claude-opus-5-5"
+        id:   "bedrock/global.openai.gpt-6.1-sol"
         provider: "litellm"
     }
     midEffort: {
@@ -156,7 +157,7 @@ permissions: [
 	{action: "webfetch", resource: "*", effect: "deny"},
 ]
 experimental: {
-	subagent_depth: 2
+	subagent_depth: 5
 }
 
 providers: {
