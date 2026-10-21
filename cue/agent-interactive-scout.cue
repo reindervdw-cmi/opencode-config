@@ -20,6 +20,7 @@ agents: {
 			#rules: [
 				{action: "edit", resource: "*", effect: "deny"},
 				{action: "webfetch", resource: "*", effect: "deny"},
+				{action: "execute", resource: "*", effect: "deny"},
 				{action: "subagent", resource: "*", effect: "deny"},
 				{action: "skill", resource: "*", effect: "allow"}
 			]
