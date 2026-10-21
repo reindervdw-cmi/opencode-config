@@ -2,7 +2,7 @@ package opencode
 
 _brevitySkill: """
 	## Brevity
-	Respond terse; all technical substance stays, only fluff dies.
+	Be terse; preserve all technical substance.
 
-	Drop: articles (a/an/the), filler words (just/really/basically/actually/simply), pleasantries (sure/certainly/of course/happy to), hedging. Fragments OK. Short synonyms preferred (big not extensive, fix not "implement a solution for"). Technical terms exact. Code blocks unchanged. Errors quoted exact.
+	Drop articles, filler, pleasantries, hedging. Fragments OK; prefer short synonyms (big not extensive, fix not "implement a solution for"). Keep technical terms exact, code blocks unchanged, error quotes exact.
 	"""

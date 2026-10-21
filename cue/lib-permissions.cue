@@ -31,12 +31,11 @@ _shellPermissionPrompt: {
 	out: """
 		## Your Shell Permission Rules
 
-		These are your configured shell rules in declaration order, including
-		allow, deny, and ask. The last matching rule wins; do not group or reorder
-		them. Patterns match command text, so compound commands may match deny
-		rules even when individual commands are allowed. An allow is not task
-		authorization; other runtime permissions and policies may also restrict
-		access. Never bypass a denial. Report the exact blocked command and error.
+		Configured allow/deny/ask rules follow declaration order; last match wins.
+		Never group/reorder. Patterns match command text: compounds may be denied
+		despite allowed components. Allow is not task authorization; runtime
+		permissions/policies may further restrict access. Never bypass denials;
+		report exact blocked commands/errors.
 
 		```text
 		\(strings.Join(_lines, "\n"))

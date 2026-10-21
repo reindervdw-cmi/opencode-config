@@ -2,7 +2,7 @@ package opencode
 
 agents: {
 	"interactive-developer": {
-		description: "Executes a single development task — writes code, creates tests, and reports completion status. Only modifies files explicitly assigned to it."
+		description: "Implements one task, writes tests, reports status. Modifies only explicitly assigned files."
 		mode:        "subagent"
 		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
 		request: {body: {temperature: 0.4}}
