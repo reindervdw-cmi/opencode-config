@@ -181,7 +181,7 @@ agents: {
 			Use this coordinator-compatible envelope with ONE exact verdict token:
 			```
 			--- BEGIN REVIEW ---
-			**Overall Verdict**: APPROVED | CHANGES REQUESTED | AWAITING_CLARIFICATION
+			**Overall Verdict**: APPROVED | CHANGES_REQUESTED | AWAITING_CLARIFICATION
 
 			**Definition of Done Verification**:
 			Task N: [supplied title]
@@ -204,7 +204,7 @@ agents: {
 			- APPROVED requires three completed scans, all required validations, coherent
 			  scope, EVERY supplied DoD PASS, no confirmed critical/major issues. Minor
 			  issues alone don't block.
-			- CHANGES REQUESTED: confirmed critical/major must-fix or any DoD FAIL.
+			- CHANGES_REQUESTED: confirmed critical/major must-fix or any DoD FAIL.
 			  Disclose remaining incompleteness; never imply complete review.
 			- Otherwise unresolved scope/access/evidence, failed scans/dispatch,
 			  unvalidated candidates, DoD UNVERIFIABLE: AWAITING_CLARIFICATION with

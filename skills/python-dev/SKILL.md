@@ -21,4 +21,4 @@ description: Python development conventions using uv, pytest, ruff, and mypy/ty.
 - Annotate constants with the Final type.
 - Prefer immutable types.
 - Prefer lazy imports in Python 3.15+.
-- Public functions/classes must always have Google-style docstrings. Complex private functions should have them.
+- Public functions/classes/class attributes must always have Google-style docstrings. Complex private functions should have them.

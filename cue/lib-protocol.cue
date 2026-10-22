@@ -1,30 +1,6 @@
 // Shared prompt fragments for the delivery pipeline.
 package opencode
 
-_statusVocabulary: """
-	## Status Vocabulary
-
-	Machine-read tokens: emit EXACTLY as written, uppercase with underscores,
-	without surrounding punctuation or markdown emphasis.
-
-	Developer task status:
-	- `COMPLETE` — every Definition-of-Done item satisfied; tests written and passing.
-	- `INCOMPLETE` — unfinished progress; state precisely what remains.
-	- `BLOCKED` — external intervention needed; state what.
-	- `AWAITING_CLARIFICATION` — genuine ambiguity prevents correct work.
-
-	Review verdicts:
-	- `APPROVED` — all DoD items verified PASS; no critical or major issues.
-	- `CHANGES_REQUESTED` — any DoD item FAIL, or any critical/major issue.
-
-	Per-criterion results: `PASS` | `FAIL` | `UNVERIFIABLE`
-
-	Issue severities:
-	- `critical` — must fix before merge; broken, unsafe, or wrong.
-	- `major` — must fix before merge; meaningful defect or missing requirement.
-	- `minor` — should fix eventually; does not block delivery.
-	"""
-
 // Agents blocked by ambiguity use this envelope instead of inventing context.
 _clarificationProtocol: """
 	## When You Lack Information
@@ -57,69 +33,6 @@ _clarificationProtocol: """
 	Clarification requests are not failures; the Two-Strike Rule exempts them.
 	"""
 
-// Provider-neutral identity passed unchanged through triage, planning, task
-// dispatch, and reporting. Consumers choose provider tooling, not this contract.
-_forgeContextSchema: """
-	## Forge Context
-	forge: [github | azure-devops | other | none]
-	host: [forge hostname; include organization/collection URL when applicable]
-	repository: [repository identity, e.g. owner/name; null if not applicable]
-	project: [project identity; null if provider has no project scope]
-	issue_id: [issue/work-item identifier; null if no linked issue]
-	issue_url: [canonical issue/work-item URL; null if no linked issue]
-	target_branch: [exact delivery base/PR target branch]
-
-	Handoff unchanged; absent fields are explicit null. Never invent identities
-	or assume github.com, organization, or branch. Clarify required unknowns
-	before delivery. Context is not authorization or provider command syntax.
-	"""
-
-// THE plan schema.
-_planSchema: """
-	```
-	--- BEGIN PLAN ---
-
-	\(_forgeContextSchema)
-
-	## Git Strategy
-	branch: [exact branch name, e.g. feature/1234-add-login]
-	base: [branch to branch from and target in the PR, e.g. main]
-	notes: [anything the program manager must know before the first commit]
-
-	## Task Plan
-
-	### Task 1: [short title]
-	- **Description**: [what must be done, concretely]
-	- **Files**: [explicit paths this task may create/modify/delete]
-	- **Parallel group**: [A/B/C... — same-letter tasks may run concurrently]
-	- **Depends on**: [task numbers, or "none"]
-	- **Checkpoint after**: [yes | no]
-	- **Verification**: [exact command(s) proving this task works, e.g. `uv run pytest tests/test_login.py`]
-	- **Definition of Done**:
-	  - [ ] [specific, independently checkable criterion]
-	  - [ ] [Tests: which tests must exist and pass]
-	- **Satisfies**: [acceptance-criterion IDs from triage this task serves, e.g. AC1, AC3]
-
-	### Task 2: [short title]
-	...
-
-	## Test Strategy
-	[test types, frameworks, and the full-suite command for the whole change]
-
-	## Acceptance Criteria Coverage
-	[Map EVERY acceptance-criterion ID to satisfying task numbers.
-	 Explicitly identify uncovered criteria and why; silent omission is a defect.]
-
-	## Risks
-	- [risk]: [mitigation]
-
-	## Rollback Plan
-	[how to revert if delivery fails]
-
-	--- END PLAN ---
-	```
-	"""
-
 // Concurrency control for parallel developers. Rests on prompt compliance,
 // since all developers share one working tree and `edit` cannot be scoped
 // per-dispatch.
@@ -136,13 +49,15 @@ _fileOwnership: """
 
 	**Read any repository file** without asking.
 
-	**Stop and report; do not edit** unassigned paths, including other tasks'
+	**Stop dependent work; do not edit** unassigned paths, including other tasks'
 	source, config/CI/infrastructure, and shared manifests/lockfiles
 	(`package.json`, `pyproject.toml`, `uv.lock`, `Cargo.toml`, `go.mod`).
 	The program manager sequences high-collision manifests/lockfiles.
 
-	Finish safe work, then report `INCOMPLETE` naming needed unlisted files
-	and why. Never expand scope yourself.
+	Finish safe independent work, then return the clarification envelope naming
+	needed unlisted files, why authorization is required, and completed work in
+	`context`. Do not also emit a completion report. `INCOMPLETE` is for unfinished
+	progress without unresolved scope/requirements; never expand scope yourself.
 	"""
 
 // Developer completion report. Read by the program manager, QA, and reviewer.
@@ -155,7 +70,7 @@ _developerReport: """
 	--- BEGIN REPORT ---
 	status: COMPLETE | INCOMPLETE | BLOCKED
 
-	forge_context: [copy supplied Forge Context fields unchanged; do not infer missing values]
+	forge_context: [include only if supplied; copy fields unchanged; do not infer missing values]
 
 	files_modified:
 	  - path: [path]
@@ -216,9 +131,10 @@ _interactiveDeveloperPrompt: """
 
 	## Asking Questions
 
-	Stop and return clarification to `interactive-coordinator` for unresolved
+	Return clarification to `interactive-coordinator` for unresolved
 	requirements/design, ambiguous DoD, correctness-affecting approach choices,
-	or needed unassigned files (do not modify them). Never spawn the coordinator
+	or needed unassigned files (stop dependent work; finish safe independent work
+	per File Ownership, then use only the clarification envelope). Never spawn the coordinator
 	or bypass subagent permissions. Resolve code/scout-answerable questions
 	yourself; ask only about genuine correctness-affecting ambiguity.
 
@@ -249,7 +165,7 @@ _interactiveDeveloperPrompt: """
 	\(_fileOwnership)
 
 	Preview cross-file shell/edit changes; apply none if any path is unassigned.
-	Stop dependent work and report/clarify needed unassigned paths; never expand ownership.
+	Stop dependent work and clarify needed unassigned paths per File Ownership; never expand ownership.
 
 	\(_developerReport)
 
@@ -279,27 +195,24 @@ _evidenceStandard: """
 	- Never invent issues for thoroughness; clean checks are useful.
 	"""
 
-_sandboxNote: """
-	## Sandbox Environment
-
-	Sandbox sessions may hide repository paths that exist on the host.
-	If an expected path is invisible:
-	- Treat it as likely outside the sandbox, not missing/deleted/misconfigured.
-	- Report `UNVERIFIABLE` or `out_of_scope_needed`; never invent contents/defects.
-	- Do not retry; a second attempt will not reveal it.
-	"""
-
 _reviewSignalPolicy: """
 	## Review Signal Policy
 
 	Flag only certain, high-signal compile/parse failures, logic errors, or
 	applicable rule violations with the rule quoted. Uncertain issues are not findings.
 
-	Exclude style, subjective suggestions, input/state-specific issues,
+	Include evidenced introduced input/state-specific defects, including empty
+	input and state transitions. Identify a concrete supported input or reachable
+	state, cite code or actual output proving the failure and consequence; do not
+	reject a defect merely because it occurs only under that condition. Supported
+	security consequences qualify under the same evidence standard.
+
+	Exclude style, subjective suggestions, unsupported hypothetical scenarios,
 	pre-existing defects, inspected-correct code, linter-detectable issues,
 	explicitly silenced rule violations, nitpicks, and general quality advice.
-	Exclude test-coverage gaps/general security concerns unless explicitly
-	required by an applicable scoped rule.
+	Exclude test-coverage gaps and speculative general security concerns unless
+	explicitly required by an applicable scoped rule; never exclude a concrete,
+	evidenced security defect as a general concern.
 
 	DoD compliance is separate: explicit requirements can FAIL despite these
 	extra-finding exclusions. Never suppress that failure or invent a finding
