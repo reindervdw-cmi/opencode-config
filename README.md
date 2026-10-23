@@ -28,24 +28,17 @@ Use [`compose.yaml`](compose.yaml) to run the OpenCode server in Docker for sand
 
 ```sh
 docker compose up -d --build
-docker compose logs -f opencode
 ```
 
 The server listens at `http://127.0.0.1:49374`. The container mounts `~/repositories`, your OpenCode configuration and data, and the development caches listed in `compose.yaml`. You may need to modify the volume mounts for your personal setup.
 
-After changing the image or mounts, rebuild and recreate the container from the host:
+You can then connect your OpenCode to the sandboxed server with
 
 ```sh
-docker compose config --quiet
-docker compose up -d --build --force-recreate
-docker compose exec opencode bash -c 'git --version && uv --version && cargo --version && rustc --version && node --version && npm --version && nvm --version && rg --version'
+~/.opencode/bin/opencode --server http://127.0.0.1:49374
 ```
 
-Stop the server with:
-
-```sh
-docker compose down
-```
+You may want to alias the above command to `opencode` in your shell configurations.
 
 ## Maintenance
 
