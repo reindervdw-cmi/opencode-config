@@ -21,6 +21,7 @@ sessions/
 # Credentials and machine-specific overrides. Keep manifests and this file.
 .env
 .env.*
+!.env.example
 .npmrc
 auth.json
 credentials.json

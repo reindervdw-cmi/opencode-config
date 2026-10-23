@@ -1,0 +1,35 @@
+services:
+  opencode:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["serve", "--hostname", "0.0.0.0", "--port", "49374"]
+    container_name: opencode
+    restart: unless-stopped
+    env_file: .env
+    user: "1000:1000"
+
+    ports:
+      - "127.0.0.1:49374:49374"
+
+    mem_limit: 25g # Modify to suit your computer's memory.
+    volumes:
+      # DO NOT MODIFY THESE (unless you know what you're doing).
+      - ${HOME}/.config/opencode:${HOME}/.config/opencode
+      - ${HOME}/.cache/opencode:${HOME}/.cache/opencode
+      - ${HOME}/.local/share/opencode:${HOME}/.local/share/opencode
+      - ${HOME}/.local/state/opencode:${HOME}/.local/state/opencode
+
+      - ${HOME}/.cargo:${HOME}/.cargo
+      - ${HOME}/.cache/cargo:${HOME}/.cache/cargo
+
+      - ${HOME}/.cache/uv:${HOME}/.cache/uv
+      - ${HOME}/.local/share/uv:${HOME}/.local/share/uv
+
+      # Change the below to the directories OpenCode needs access to.
+      - ${HOME}/repositories:${HOME}/repositories
+
+    environment:
+      HOME: ${HOME}
+      TEXTUAL_THEME: dark
+      OPENSPEC_TELEMETRY: "0"

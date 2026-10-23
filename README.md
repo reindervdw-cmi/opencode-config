@@ -18,28 +18,43 @@ opencode --agent interactive-architect
 
 Describe your change, choose a branch or worktree, and approve the architect's plan. Then say:
 
-> Execute this approved plan using interactive-coordinator.
+> Execute.
 
 Coordinator delegates implementation and testing, then arranges independent review. Commits, pushes, and PRs require your authorization.
 
+### Docker Compose
+
+Use [`compose.yaml`](compose.yaml) to run the OpenCode server in Docker for sandboxing. From this repository, create `.env` from `.env.example` if it does not already exist, and set `HOME` to your home directory:
+
 ```sh
-opencode --agent review-orchestrator        # Review a change
-opencode --agent interactive-scrum-master   # Manage Azure DevOps or GitHub tickets
-opencode --agent agent-examiner             # Understand and quiz yourself on branch changes
+docker compose up -d --build
+docker compose logs -f opencode
 ```
 
-For review, provide intent, baseline, paths, and Definition of Done; explicitly include any uncommitted changes. For PR review, supply the URL and authorize forge reads. Results stay in the terminal.
+The server listens at `http://127.0.0.1:49374`. The container mounts `~/repositories`, your OpenCode configuration and data, and the development caches listed in `compose.yaml`. You may need to modify the volume mounts for your personal setup.
+
+After changing the image or mounts, rebuild and recreate the container from the host:
+
+```sh
+docker compose config --quiet
+docker compose up -d --build --force-recreate
+docker compose exec opencode bash -c 'git --version && uv --version && cargo --version && rustc --version && node --version && npm --version && nvm --version && rg --version'
+```
+
+Stop the server with:
+
+```sh
+docker compose down
+```
 
 ## Maintenance
 
-Requires `just` and CUE for configuration; D2 with the TALA layout engine available (`d2 layout tala`) for diagrams. If your D2 distribution needs an external plugin, put `d2plugin-tala` on PATH.
+Requires `just` and CUE for configuration.
 
-Edit `cue/`, not generated `opencode.json`. Rebuild configuration or edit `agents.d2` and regenerate its SVG:
+Edit `cue/`, not generated `opencode.json`.
 
 ```sh
-just validate
 just build
-just diagram
 ```
 
-Skills live in `skills/`; custom tools live in `tools/`.
+Skills live in `skills/`.
