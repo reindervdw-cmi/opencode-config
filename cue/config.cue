@@ -9,11 +9,6 @@ _models: [
         "provider": "litellm"
     },
     {
-        "id": "bedrock/global.anthropic.claude-sonnet-4-20250514-v1:0",
-        "name": "Global Claude Sonnet 4",
-        "provider": "litellm"
-    },
-    {
         "id": "bedrock/global.anthropic.claude-sonnet-4-5-20250929-v1:0",
         "name": "Global Claude Sonnet 4.5",
         "provider": "litellm"
@@ -21,16 +16,6 @@ _models: [
     {
         "id": "bedrock/global.anthropic.claude-opus-4-5-20251101-v1:0",
         "name": "GLOBAL Anthropic Claude Opus 4.5",
-        "provider": "litellm"
-    },
-    {
-        "id": "bedrock/global.openai.gpt-5.6-terra",
-        "name": "Global OpenAI GPT-5.6 Terra",
-        "provider": "litellm"
-    },
-    {
-        "id": "bedrock/global.openai.gpt-5.6-luna",
-        "name": "Global OpenAI GPT-5.6 Luna",
         "provider": "litellm"
     },
     {
@@ -49,33 +34,8 @@ _models: [
         "provider": "litellm"
     },
     {
-        "id": "bedrock/global.anthropic.claude-opus-4-6-v1",
-        "name": "Global Anthropic Claude Opus 4.6",
-        "provider": "litellm"
-    },
-    {
-        "id": "bedrock/global.anthropic.claude-sonnet-4-6",
-        "name": "Global Anthropic Claude Sonnet 4.6",
-        "provider": "litellm"
-    },
-    {
-        "id": "bedrock/global.moonshotai.kimi-k3",
-        "name": "Global Moonshot AI Kimi K3",
-        "provider": "litellm"
-    },
-    {
         "id": "bedrock/global.openai.gpt-6-sol",
         "name": "Global OpenAI GPT-6 Sol",
-        "provider": "litellm"
-    },
-    {
-        "id": "bedrock/global.openai.gpt-6-luna",
-        "name": "Global OpenAI GPT-6 Luna",
-        "provider": "litellm"
-    },
-    {
-        "id": "bedrock/global.anthropic.claude-opus-5-5",
-        "name": "Global Anthropic Claude Opus 5.5",
         "provider": "litellm"
     },
     {
@@ -124,21 +84,77 @@ _models: [
         "provider": "litellm"
     },
     {
+        "id": "bedrock/global.zai.glm-5.3",
+        "name": "Global Z.AI GLM 5.3",
+        "provider": "litellm"
+    },
+    {
+        "id": "bedrock/global.moonshotai.kimi-k3",
+        "name": "Global Moonshot AI Kimi K3",
+        "provider": "litellm"
+    },
+    {
+        "id": "bedrock/global.anthropic.claude-haiku-5-5",
+        "name": "Global Anthropic Claude Haiku 5.5",
+        "provider": "litellm"
+    },
+    {
         "id": "bedrock/global.anthropic.claude-sonnet-5-5",
         "name": "Global Anthropic Claude Sonnet 5.5",
+        "provider": "litellm"
+    },
+    {
+        "id": "bedrock/global.anthropic.claude-sonnet-4-6",
+        "name": "Global Anthropic Claude Sonnet 4.6",
+        "provider": "litellm"
+    },
+    {
+        "id": "bedrock/global.anthropic.claude-opus-4-6-v1",
+        "name": "Global Anthropic Claude Opus 4.6",
+        "provider": "litellm"
+    },
+    {
+        "id": "bedrock/global.openai.gpt-5.6-luna",
+        "name": "Global OpenAI GPT-5.6 Luna",
+        "provider": "litellm"
+    },
+    {
+        "id": "bedrock/global.openai.gpt-6-luna",
+        "name": "Global OpenAI GPT-6 Luna",
+        "provider": "litellm"
+    },
+    {
+        "id": "bedrock/global.openai.gpt-6.1-terra",
+        "name": "Global OpenAI GPT-6.1 Terra",
+        "provider": "litellm"
+    },
+    {
+        "id": "bedrock/global.anthropic.claude-opus-5-5",
+        "name": "Global Anthropic Claude Opus 5.5",
+        "provider": "litellm"
+    },
+    {
+        "id": "bedrock/global.openai.gpt-5.6-terra",
+        "name": "Global OpenAI GPT-5.6 Terra",
         "provider": "litellm"
     }
 ]
 
+_apim_models: [{
+    
+        "id": "gpt-5.5",
+        "name": "Azure APIM GPT 5.5",
+        "provider": "azureapim"
+}]
+
 
 _modelDefs: {
-    // Identical high/mid models is intentional; Sol 6.1 seems to work well on both.
     highEffort: {
         id:   "bedrock/global.openai.gpt-6.1-sol"
         provider: "litellm"
     }
     midEffort: {
-        id:   "bedrock/global.openai.gpt-6.1-sol"
+        id:   "bedrock/global.openai.gpt-6.1-terra"
         provider: "litellm"
     }
     lowEffort: {
@@ -169,6 +185,20 @@ providers: {
 		}
 		models: {
             for _, model in _models {
+                (model.id): {
+                    name: model.name
+                }
+            }
+	}
+	},
+	azureapim: {
+		package: "aisdk:@ai-sdk/openai-compatible"
+		name: "LiteLLM"
+		settings: {
+			baseURL: "https://cmi-apim-01.azure-api.net/CMI-APIM/openai"
+		}
+		models: {
+            for _, model in _apim_models {
                 (model.id): {
                     name: model.name
                 }

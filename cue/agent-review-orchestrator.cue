@@ -27,7 +27,7 @@ agents: {
 				{action: "subagent", resource: "review-rules", effect: "allow"},
 				{action: "subagent", resource: "review-bugs", effect: "allow"},
 				{action: "subagent", resource: "review-validator", effect: "allow"},
-				{action: "subagent", resource: "interactive-scout", effect: "allow"},
+				{action: "subagent", resource: "scout", effect: "allow"},
 				{action: "skill", resource: "*", effect: "allow"},
 				{action: "question", resource: "*", effect: "allow"},
 			]
@@ -129,7 +129,7 @@ agents: {
 			- Supply full captured diff or lossless bounded partitions covering EVERY
 			  hunk/required context, never summaries. Account for partitions/missing
 			  evidence; never recapture different tree versions per specialist.
-			- `interactive-scout` provides read-only context, not scans/validation.
+			- `scout` provides read-only context, not scans/validation.
 			  Assume tools work; purposeful calls, actual errors, no fabricated output.
 
 			### 5. Dispatch independent scans in parallel

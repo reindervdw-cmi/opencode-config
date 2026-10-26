@@ -1,7 +1,7 @@
 package opencode
 
 agents: {
-	"interactive-scout": {
+	"scout": {
 		description: "Read-only codebase explorer: finds files, searches code/structure, answers questions. No edits, builds, or tests."
 		mode:        "subagent"
 		model:      "\(_modelDefs.lowEffort.provider)/\(_modelDefs.lowEffort.id)"
