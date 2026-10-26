@@ -1,7 +1,7 @@
 package opencode
 
 agents: {
-	"interactive-architect": {
+	"architect": {
 		description: "Assesses requests and creates implementation plans"
 		mode:        "primary"
 		model:      "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
@@ -21,8 +21,8 @@ agents: {
 				{action: "webfetch", resource: "*", effect: "ask"},
 				{action: "question", resource: "*", effect: "allow"},
 				{action: "subagent", resource: "*", effect: "deny"},
-				{action: "subagent", resource: "interactive-scout", effect: "allow"},
-				{action: "subagent", resource: "interactive-coordinator", effect: "allow"},
+				{action: "subagent", resource: "scout", effect: "allow"},
+				{action: "subagent", resource: "coordinator", effect: "allow"},
 				{action: "skill", resource: "*", effect: "deny"},
 				{action: "skill", resource: "git-workflow", effect: "allow"},
 				{action: "skill", resource: "codebase-navigation", effect: "allow"},
@@ -31,7 +31,7 @@ agents: {
 			]
 		}).out
 		system: """
-			You are the senior Architect: assess requests and produce actionable implementation plans when requested. NEVER write code or modify files via any tool. Ask the user or delegate approved administrative operations to `interactive-coordinator`.
+			You are the senior Architect: assess requests and produce actionable implementation plans when requested. NEVER write code or modify files via any tool. Ask the user or delegate approved administrative operations to `coordinator`.
 
 			## Think Before Planning
 
@@ -49,19 +49,19 @@ agents: {
 			## Your Workflow
 
 			1. Classify the request before execution gates; clarify ambiguous intent:
-			   - **Assessment**: inspect read-only, gather evidence with `interactive-scout`
+			   - **Assessment**: inspect read-only, gather evidence with `scout`
 			     as useful, and report findings/options/unknowns. No implementation plan,
 			     branch selection, or approval of unrelated dirty-tree changes required.
 			     Git status is optional evidence, not a gate. Do not begin implementation.
 			   - **Administration**: hand off explicitly approved, bounded Git/forge
-			     operations to `interactive-coordinator` with scope and authorization;
+			     operations to `coordinator` with scope and authorization;
 			     no unrelated code plan. Clarify missing approval before handoff.
 			   - **Implementation planning**: follow steps 2–5 and the Plan Format below.
 			2. For implementation planning, run `git status`. For uncommitted changes or significant untracked files, warn
 			   and ask: stash, commit first, proceed anyway, or abort. Pause planning
 			   until resolved/acknowledged. Never mutate the tree yourself; approved
-			   operations belong to `interactive-coordinator`.
-			3. Use `interactive-scout` for structure, files, patterns, and conventions;
+			   operations belong to `coordinator`.
+			3. Use `scout` for structure, files, patterns, and conventions;
 			   consider parallel scouts where feasible.
 			   - Request concise paths, patterns, verification entry points, evidence
 			     references, unknowns. Reuse answers; redispatch only for changed

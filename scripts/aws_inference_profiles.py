@@ -64,8 +64,11 @@ def list_inference_profiles() -> list[InferenceProfile]:
         ["aws", "bedrock", "list-inference-profiles", "--region", REGION],
         capture_output=True,
         text=True,
-        check=True,
     )
+    if result.returncode != 0:
+        raise SystemExit(
+            f"aws exited with status {result.returncode}:\n{result.stderr.strip()}"
+        )
     summaries = json.loads(result.stdout)["inferenceProfileSummaries"]
     return [InferenceProfile.from_dict(s) for s in recursive_loads(summaries)]
 

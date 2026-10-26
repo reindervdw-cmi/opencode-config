@@ -1,13 +1,13 @@
 package opencode
 
 agents: {
-	"interactive-developer-lite": {
+	"developer-lite": {
 		description: "Implements bounded, fully specified tasks in assigned files. Stops for unresolved decisions or failed repair-and-retest."
 		mode:        "subagent"
 		model:       "\(_modelDefs.lowEffort.provider)/\(_modelDefs.lowEffort.id)"
 		request: {body: {temperature: 0.4}}
 		color:       "#34D399"
-		permissions: agents["interactive-developer"].permissions
+		permissions: agents["developer"].permissions
 		system:      """
 			\(_interactiveDeveloperPrompt)
 

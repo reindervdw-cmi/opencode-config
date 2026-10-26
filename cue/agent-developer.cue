@@ -1,7 +1,7 @@
 package opencode
 
 agents: {
-	"interactive-developer": {
+	"developer": {
 		description: "Implements one task, writes tests, reports status. Modifies only explicitly assigned files."
 		mode:        "subagent"
 		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
@@ -18,7 +18,7 @@ agents: {
 				{action: "edit", resource: "*", effect: "allow"},
 				{action: "webfetch", resource: "*", effect: "deny"},
 				{action: "subagent", resource: "*", effect: "deny"},
-				{action: "subagent", resource: "interactive-scout", effect: "allow"},
+				{action: "subagent", resource: "scout", effect: "allow"},
 				{action: "skill", resource: "*", effect: "allow"},
 			]
 		}).out
