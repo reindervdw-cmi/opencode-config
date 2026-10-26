@@ -33,27 +33,44 @@ opencode --agent egm-elephant
 
 Elephant interviews you, presents alternatives (including simpler approaches), and evolves a free-form design through explicit human decisions. It does not implement code or run commands. Bounded Scout evidence supports five ordered Goldfish stages:
 
-1. **Initial zoom-out:** `egm-goldfish-zoom-out` alone.
-2. **Comprehension:** `egm-goldfish-comprehension` alone.
-3. **Critic:** `egm-goldfish-design`, `egm-goldfish-structural`, and `egm-goldfish-style` in parallel.
-4. **Intermediate zoom-out:** `egm-goldfish-zoom-out` alone.
-5. **Design-readiness:** `egm-goldfish-implementation-readiness`, `egm-goldfish-codebase-details`, and `egm-goldfish-style` in parallel.
+1. **Initial zoom-out:** `egm-goldfish-zoom-out-review` alone.
+2. **Comprehension:** `egm-goldfish-comprehension-review` alone.
+3. **Critic:** `egm-goldfish-design-review`, `egm-goldfish-structural-review`, and `egm-goldfish-style-review` in parallel.
+4. **Intermediate zoom-out:** `egm-goldfish-zoom-out-review` alone.
+5. **Design-readiness:** `egm-goldfish-implementation-readiness-review`, `egm-goldfish-codebase-details-review`, and `egm-goldfish-style-review` in parallel.
 
-All seven read-only, subagent-only personas use `midEffort` and own their single-lens rubric:
+Every Goldfish persona has separate read-only, subagent-only review and brainstorming agents. `-review` IDs review documents; `-brainstorm` IDs explore concepts. The same split applies to [`egm-synthesizer-review`](cue/agent-egm-synthesizer-review.cue) and [`egm-synthesizer-brainstorm`](cue/agent-egm-synthesizer-brainstorm.cue). Agent IDs select the task; no `Mode` argument is used anywhere in EGM dispatch. CUE's `mode: "subagent"` still controls how these agents launch.
+
+Each review persona owns its single-lens rubric:
 
 | Reviewer source / ID                                                                           | Lens                                                        |
 | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| [`egm-goldfish-zoom-out`](cue/agent-egm-goldfish-zoom-out.cue)                                 | Problem/solution fit, architecture, scope, simplicity       |
-| [`egm-goldfish-comprehension`](cue/agent-egm-goldfish-comprehension.cue)                       | Independent reconstruction and comprehension gaps           |
-| [`egm-goldfish-design`](cue/agent-egm-goldfish-design.cue)                                     | Technical tradeoffs, failures, security, dependencies       |
-| [`egm-goldfish-structural`](cue/agent-egm-goldfish-structural.cue)                             | Completeness, consistency, acceptance traceability          |
-| [`egm-goldfish-style`](cue/agent-egm-goldfish-style.cue)                                       | Precision, readability, consequential wording               |
-| [`egm-goldfish-implementation-readiness`](cue/agent-egm-goldfish-implementation-readiness.cue) | Decisions and evidence sufficient for later task derivation |
-| [`egm-goldfish-codebase-details`](cue/agent-egm-goldfish-codebase-details.cue)                 | Repository claims against primary codebase evidence         |
+| [`egm-goldfish-zoom-out-review`](cue/agent-egm-goldfish-zoom-out-review.cue)                                 | Problem/solution fit, architecture, scope, simplicity       |
+| [`egm-goldfish-comprehension-review`](cue/agent-egm-goldfish-comprehension-review.cue)                       | Independent reconstruction and comprehension gaps           |
+| [`egm-goldfish-design-review`](cue/agent-egm-goldfish-design-review.cue)                                     | Technical tradeoffs, failures, security, dependencies       |
+| [`egm-goldfish-structural-review`](cue/agent-egm-goldfish-structural-review.cue)                             | Layout, heading hierarchy, formatting, template compliance  |
+| [`egm-goldfish-style-review`](cue/agent-egm-goldfish-style-review.cue)                                       | Precision, readability, consequential wording               |
+| [`egm-goldfish-implementation-readiness-review`](cue/agent-egm-goldfish-implementation-readiness-review.cue) | Decisions and evidence sufficient for later task derivation |
+| [`egm-goldfish-codebase-details-review`](cue/agent-egm-goldfish-codebase-details-review.cue)                 | Repository claims against primary codebase evidence         |
 
-Parallelism is only within a stage: Elephant waits for **all** required reviewers, never overlaps stages or sends sibling results to reviewers, and synthesizes directly into the existing ledger. No synthesizer agent or extra artifacts are introduced. Deduplication preserves stable finding IDs, individual attribution, evidence, severity, disagreements, and human dispositions. Resolve findings/disagreements with the human and obtain an explicit stage gate before proceeding; missing, failed, or contaminated reviews block the stage rather than disappearing through consolidation.
+Brainstorming uses these six dedicated agents in parallel through `egm-synthesizer-brainstorm`, or directly if nested dispatch is unavailable:
+
+| Brainstorm agent | Lens |
+| --- | --- |
+| [`egm-goldfish-zoom-out-brainstorm`](cue/agent-egm-goldfish-zoom-out-brainstorm.cue) | Contrarian/YAGNI, simpler alternatives and reuse |
+| [`egm-goldfish-design-brainstorm`](cue/agent-egm-goldfish-design-brainstorm.cue) | Architecture, cost, quotas and scale |
+| [`egm-goldfish-comprehension-brainstorm`](cue/agent-egm-goldfish-comprehension-brainstorm.cue) | UX and developer ergonomics |
+| [`egm-goldfish-implementation-readiness-brainstorm`](cue/agent-egm-goldfish-implementation-readiness-brainstorm.cue) | Migration, compatibility, rollout and rollback |
+| [`egm-goldfish-codebase-details-brainstorm`](cue/agent-egm-goldfish-codebase-details-brainstorm.cue) | Observability, telemetry and operational debugging |
+| [`egm-goldfish-structural-brainstorm`](cue/agent-egm-goldfish-structural-brainstorm.cue) | Tech debt, coupling and maintainability |
+
+[`egm-goldfish-style-brainstorm`](cue/agent-egm-goldfish-style-brainstorm.cue) adds objective framing and scope precision only when explicitly requested; it does not replace one of the six standard lenses. Elephant can dispatch both agent sets. Each Synthesizer can dispatch only its own set; task mismatches return limitations rather than switching roles.
+
+Parallelism is only within a review stage: Elephant waits for **all** required reviewers, never overlaps stages or sends sibling results to reviewers. Each stage uses a fresh `egm-synthesizer-review` to aggregate findings and write its report; brainstorming uses a fresh `egm-synthesizer-brainstorm` to write `concepts_brief.md`. Deduplication preserves individual attribution, evidence, severity, and disagreements. Elephant resolves findings with the human through `egm-resolve`; incomplete results remain explicit limitations rather than disappearing through consolidation. Interactive review has stage checkpoints; uninterrupted review runs sequentially without pauses and writes a consolidated report.
 
 Reviewers read the full free-form design and explicit primary references. No rigid headings, task template, or existing task breakdown are required. Design-readiness means a feasible implementation breakdown can be derived; it is not actual tasks, task approval, execution/Git authorization, or proof that checks pass.
+
+Elephant can load project-specific skills for project history, conventions, and primary context references. Skill permissions match IDs, not source directories, so it allows all skill IDs without requiring a naming convention. Loading a skill does not authorize implementation, commands, Git/forge operations, additional output paths, or bypassing human gates.
 
 #### Artifacts and confinement
 
@@ -97,7 +114,7 @@ The EGM Coordinator checks the repository/worktree root, exact revision, accepta
 
 Material design/requirements discoveries stop affected work and return to the caller/user for Elephant revision; the Coordinator does not edit the design or recursively dispatch Elephant. Resume affected work only after reviewed, human-approved revised design/coverage and reauthorized breakdown/execution. Substantive breakdown changes likewise need reapproval and renewed execution/applicable Git authorization; retries cannot bypass gates. Only demonstrably unaffected, already authorized work may continue.
 
-This is a lean, original adaptation, not a full plugin port; no upstream prompts are copied. Background: [Google announcement](https://opensource.googleblog.com/2026/10/introducing-elephant-goldfish-model-plugin.html), [essay](https://drensin.medium.com/elephants-goldfish-and-the-new-golden-age-of-software-engineering-c33641a48874), and [upstream Elephant/Goldfish model](https://github.com/google/elephant-goldfish-model). Local definitions: [Elephant](cue/agent-egm-elephant.cue), [shared Goldfish boundary](cue/lib-egm.cue), the seven reviewer sources above, and [EGM Coordinator](cue/agent-egm-coordinator.cue). The existing [Architect](cue/agent-architect.cue) workflow above remains available.
+This adapts the upstream EGM skills and standards, with separate brainstorm/review agents and a local execution Coordinator; bootstrap is not included. Background: [Google announcement](https://opensource.googleblog.com/2026/10/introducing-elephant-goldfish-model-plugin.html), [essay](https://drensin.medium.com/elephants-goldfish-and-the-new-golden-age-of-software-engineering-c33641a48874), and [upstream Elephant/Goldfish model](https://github.com/google/elephant-goldfish-model). Local definitions: [Elephant](cue/agent-egm-elephant.cue), [shared Goldfish boundaries/contracts](cue/lib-egm.cue), the seven reviewer and seven brainstormer sources above, both Synthesizers, and [EGM Coordinator](cue/agent-egm-coordinator.cue). The existing [Architect](cue/agent-architect.cue) workflow above remains available.
 
 ### Docker Compose
 
