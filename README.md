@@ -8,143 +8,53 @@ Place this repository in `~/.config/opencode/` (back up any existing configurati
 
 For GitHub work, install and authenticate `gh`. For Azure DevOps, use Azure CLI with the `azure-devops` extension.
 
-Run OpenCode from the project you want to work on. After editing CUE sources, follow the generation steps under [Maintenance](#maintenance).
-
 ## Usage
+
+Open OpenCode from your project's directory:
 
 ```sh
 opencode
 ```
 
-Describe your change, choose a branch or worktree, and approve the architect's plan. Then say:
+### Make a change
 
-> Execute.
+Select **architect**. Describe the feature or bug, answer clarifying questions, and choose a branch or worktree when asked. Review and approve the proposed plan, then say **Execute**.
 
-Coordinator delegates implementation and testing, then arranges independent review. Commits, pushes, and PRs require your authorization.
+### Design first
 
-### Elephant/Goldfish design workflow
+Select **egm-elephant**. Describe your idea or provide the path to an existing design. Ask to brainstorm, draft a design, or review it. Answer questions and approve document changes as you go.
 
-Start a design conversation with Elephant:
+When ready, approve the reviewed implementation plan and ask to hand it off for execution.
 
-```sh
-# After just validate, then just build:
-opencode --agent egm-elephant
-```
+In either workflow, commits, pushes, and pull requests require your explicit authorization.
 
-Elephant interviews you, presents alternatives (including simpler approaches), and evolves a free-form design through explicit human decisions. It does not implement code or run commands. Bounded Scout evidence supports five ordered Goldfish stages:
+### Run in Docker
 
-1. **Initial zoom-out:** `egm-goldfish-zoom-out-review` alone.
-2. **Comprehension:** `egm-goldfish-comprehension-review` alone.
-3. **Critic:** `egm-goldfish-design-review`, `egm-goldfish-structural-review`, and `egm-goldfish-style-review` in parallel.
-4. **Intermediate zoom-out:** `egm-goldfish-zoom-out-review` alone.
-5. **Design-readiness:** `egm-goldfish-implementation-readiness-review`, `egm-goldfish-codebase-details-review`, and `egm-goldfish-style-review` in parallel.
+With Docker Compose installed, open this configuration repository:
 
-Every Goldfish persona has separate read-only, subagent-only review and brainstorming agents. `-review` IDs review documents; `-brainstorm` IDs explore concepts. The same split applies to [`egm-synthesizer-review`](cue/agent-egm-synthesizer-review.cue) and [`egm-synthesizer-brainstorm`](cue/agent-egm-synthesizer-brainstorm.cue). Agent IDs select the task; no `Mode` argument is used anywhere in EGM dispatch. CUE's `mode: "subagent"` still controls how these agents launch.
-
-Each review persona owns its single-lens rubric:
-
-| Reviewer source / ID                                                                           | Lens                                                        |
-| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| [`egm-goldfish-zoom-out-review`](cue/agent-egm-goldfish-zoom-out-review.cue)                                 | Problem/solution fit, architecture, scope, simplicity       |
-| [`egm-goldfish-comprehension-review`](cue/agent-egm-goldfish-comprehension-review.cue)                       | Independent reconstruction and comprehension gaps           |
-| [`egm-goldfish-design-review`](cue/agent-egm-goldfish-design-review.cue)                                     | Technical tradeoffs, failures, security, dependencies       |
-| [`egm-goldfish-structural-review`](cue/agent-egm-goldfish-structural-review.cue)                             | Layout, heading hierarchy, formatting, template compliance  |
-| [`egm-goldfish-style-review`](cue/agent-egm-goldfish-style-review.cue)                                       | Precision, readability, consequential wording               |
-| [`egm-goldfish-implementation-readiness-review`](cue/agent-egm-goldfish-implementation-readiness-review.cue) | Decisions and evidence sufficient for later task derivation |
-| [`egm-goldfish-codebase-details-review`](cue/agent-egm-goldfish-codebase-details-review.cue)                 | Repository claims against primary codebase evidence         |
-
-Brainstorming uses these six dedicated agents in parallel through `egm-synthesizer-brainstorm`, or directly if nested dispatch is unavailable:
-
-| Brainstorm agent | Lens |
-| --- | --- |
-| [`egm-goldfish-zoom-out-brainstorm`](cue/agent-egm-goldfish-zoom-out-brainstorm.cue) | Contrarian/YAGNI, simpler alternatives and reuse |
-| [`egm-goldfish-design-brainstorm`](cue/agent-egm-goldfish-design-brainstorm.cue) | Architecture, cost, quotas and scale |
-| [`egm-goldfish-comprehension-brainstorm`](cue/agent-egm-goldfish-comprehension-brainstorm.cue) | UX and developer ergonomics |
-| [`egm-goldfish-implementation-readiness-brainstorm`](cue/agent-egm-goldfish-implementation-readiness-brainstorm.cue) | Migration, compatibility, rollout and rollback |
-| [`egm-goldfish-codebase-details-brainstorm`](cue/agent-egm-goldfish-codebase-details-brainstorm.cue) | Observability, telemetry and operational debugging |
-| [`egm-goldfish-structural-brainstorm`](cue/agent-egm-goldfish-structural-brainstorm.cue) | Tech debt, coupling and maintainability |
-
-[`egm-goldfish-style-brainstorm`](cue/agent-egm-goldfish-style-brainstorm.cue) adds objective framing and scope precision only when explicitly requested; it does not replace one of the six standard lenses. Elephant can dispatch both agent sets. Each Synthesizer can dispatch only its own set; task mismatches return limitations rather than switching roles.
-
-Parallelism is only within a review stage: Elephant waits for **all** required reviewers, never overlaps stages or sends sibling results to reviewers. Each stage uses a fresh `egm-synthesizer-review` to aggregate findings and write its report; brainstorming uses a fresh `egm-synthesizer-brainstorm` to write `concepts_brief.md`. Deduplication preserves individual attribution, evidence, severity, and disagreements. Elephant resolves findings with the human through `egm-resolve`; incomplete results remain explicit limitations rather than disappearing through consolidation. Interactive review has stage checkpoints; uninterrupted review runs sequentially without pauses and writes a consolidated report.
-
-Reviewers read the full free-form design and explicit primary references. No rigid headings, task template, or existing task breakdown are required. Design-readiness means a feasible implementation breakdown can be derived; it is not actual tasks, task approval, execution/Git authorization, or proof that checks pass.
-
-Elephant can load project-specific skills for project history, conventions, and primary context references. Skill permissions match IDs, not source directories, so it allows all skill IDs without requiring a naming convention. Loading a skill does not authorize implementation, commands, Git/forge operations, additional output paths, or bypassing human gates.
-
-#### Artifacts and confinement
-
-Before any write, confirm the repository/worktree root with read-only evidence and require the session's **Location to be that root**. If it cannot be established, stop and ask; Elephant must not change Location. Approve a nonempty, single-component feature slug (no slash, backslash, dot segments, or traversal) and these exact root-relative paths:
-
-- `specs/<feature>/design.md`: design with an explicit revision marker.
-- `specs/<feature>/goldfish-review.md`: revision/change ledger, human gates, review manifests/results with stage/reviewer/lens/revision, stable finding IDs, attribution, severity, disagreements, dispositions, rationale, evidence, invalidations, accepted risks, and final approval.
-
-Creation or adoption/overwrite of existing artifacts needs explicit approval. Existing content is preserved unless overwrite is approved. Elephant may directly edit only those two approved documents: no other feature, implementation file, deletion, rename, or delegated write.
-
-This is **lexical confinement, not a hard sandbox**. Edit permissions are Location-relative; the approved slug is a prompt guard, not a dynamically narrowed permission rule. Wildcards cross path separators, so nested-feature denials must stay last. Check both artifact paths and every parent for symlinks with supported read-only tools. If absence cannot be established, disclose unchecked paths and ask for confirmation or guidance; never claim realpath confinement or symlink safety. Lack of a hard sandbox alone does not reject the workflow.
-
-Denied shell/execute does not prevent all side effects: edits can trigger formatters/plugins. Inspect available configuration read-only, disclose possible effects before approval, and ask about uncertain effects; do not run runtime probes. External evidence needs permission and never authorizes external writes. Ambient tools, instructions, skills, and plugins are not an isolation boundary; unknown tools/MCP actions remain denied and children cannot be used to bypass denials.
-
-#### Fresh review, revisions, and resume
-
-Every Goldfish dispatch uses a **new session without `sessionID`**, including reused reviewer IDs, never continuation of a previous review. Each manifest names stage, reviewer ID/lens and agent-local rubric, exact design path/current revision, and explicitly permitted primary reference paths/sections. The full design must stand on its own. By default exclude the ledger (including its path), parent deliberation, interview transcripts, earlier Scout summaries, and previous reviews/conclusions. Links do not authorize reading excluded artifacts; references cannot expand transitively.
-
-**Only intermediate zoom-out has a baseline exception:** supply the initial zoom-out result and explicit human dispositions **directly**, declared in its manifest as baseline-informed input, never as fresh evidence or a pass. Do not supply the ledger or its path, other review results, transcripts, or parent deliberation. Initial zoom-out and every other review remain independent; **Scouts never receive the exception**, baseline results, or dispositions. The intermediate reviewer compares current scope/simplicity without inheriting prior conclusions. Accepted decisions remain challengeable with new evidence or changed design: preserve prior acceptance, identify the new basis, and request renewed human disposition.
-
-Fresh sessions do **not** provide filesystem or ambient-context isolation. Children enforce their own permissions, not an intersection with the parent's. Reference/read exclusions are prompt obligations; in particular, grep permission matches the query, not the search path. Goldfish limits reads/searches to named references. Any Scout it needs is also fresh, with exact questions, the same permitted references/exclusions, no writes, commands, probes, checks, or broad searches, and requested file:line evidence, read-discovered verification entrypoints, unknowns, and exposure disclosure. Scout supplies facts, not verdicts; reading a check's entrypoint does not prove it passes.
-
-Unintended exposure, including ambient context or Scout output, makes a review contaminated and **UNVERIFIABLE**, never a pass. Correct the manifest/design and redispatch freshly, or seek human guidance if uncontaminated review cannot be established. Failed launches/reads and missing essential evidence cannot count as success. Verdicts are `READY`, `READY_WITH_ACCEPTED_RISKS`, `NOT_READY`, or `UNVERIFIABLE`. Only you can accept nonessential risks, with rationale for an explicit revision; waivers cannot replace essential facts, requirements, permissions, or authorization.
-
-Resolve findings with the human and obtain the explicit gate before the next stage. Scope, architecture, or acceptance changes invalidate **all** prior lenses; narrower changes must record which lenses are invalidated and why. Repeat invalidated reviews freshly in stage order, preserving stage gates and waiting for all required reviewers; retained evidence keeps its original reviewed revision and an explanation of continued applicability, never relabeled as a new review. Final design approval names the current revision, applicable reviews, and accepted risks, with no unresolved essential blockers.
-
-On resume, summarize both artifacts and approvals, identify missing/stale state, and ask to repair it. File existence or a prior session summary is not approval. Do not review a design that changes during review.
-
-#### Breakdown and execution gates
-
-After current-revision design approval, Elephant offers an `egm-coordinator` handoff for **breakdown only**, dispatched only with your acceptance. You can also start that Coordinator directly with an approved design and coverage ledger; a preexisting task plan is not required:
-
-```sh
-# After just validate, then just build:
-opencode --agent egm-coordinator
-```
-
-The EGM Coordinator checks the repository/worktree root, exact revision, acceptance criteria, reviewed coverage, approval, and accepted risks. Read-only Scout evidence supports a full derived breakdown: complete task descriptions, exact allowed create/modify/delete/rename paths, dependencies/non-overlapping batches, complete DoDs, verification entrypoints, and acceptance traceability covering every criterion. It adds no requirements or architecture; unresolved design choices return to the caller/user for Elephant revision. Derivation does not authorize branch setup, mutation, or developer dispatch.
-
-**Design approval, derived-breakdown approval, execution authorization, and Git Strategy authorization are distinct.** Before implementation setup, approve the breakdown tied to the exact design revision, explicitly authorize execution for that revision/breakdown, and authorize the applicable Git Strategy (including a no-mutations strategy). One response may grant breakdown approval and execution/Git authorization when every scope is explicit. Design approval alone authorizes none of implementation, task execution, Git mutation, or forge writes; commits, pushes, and PRs still require authorization.
-
-Material design/requirements discoveries stop affected work and return to the caller/user for Elephant revision; the Coordinator does not edit the design or recursively dispatch Elephant. Resume affected work only after reviewed, human-approved revised design/coverage and reauthorized breakdown/execution. Substantive breakdown changes likewise need reapproval and renewed execution/applicable Git authorization; retries cannot bypass gates. Only demonstrably unaffected, already authorized work may continue.
-
-This adapts the upstream EGM skills and standards, with separate brainstorm/review agents and a local execution Coordinator; bootstrap is not included. Background: [Google announcement](https://opensource.googleblog.com/2026/10/introducing-elephant-goldfish-model-plugin.html), [essay](https://drensin.medium.com/elephants-goldfish-and-the-new-golden-age-of-software-engineering-c33641a48874), and [upstream Elephant/Goldfish model](https://github.com/google/elephant-goldfish-model). Local definitions: [Elephant](cue/agent-egm-elephant.cue), [shared Goldfish boundaries/contracts](cue/lib-egm.cue), the seven reviewer and seven brainstormer sources above, both Synthesizers, and [EGM Coordinator](cue/agent-egm-coordinator.cue). The existing [Architect](cue/agent-architect.cue) workflow above remains available.
-
-### Docker Compose
-
-Use [`compose.yaml`](compose.yaml) to run the OpenCode server in Docker for sandboxing. From this repository, create `.env` from `.env.example` if it does not already exist, and set `HOME` to your home directory:
+1. Create `.env` from [`.env.example`](.env.example) if it does not already exist. Set `HOME` to your home directory and choose a server password instead of the example value.
+2. Keep your projects in `~/repositories`, or update the project mount in [`compose.yaml`](compose.yaml).
+3. Start the server:
 
 ```sh
 docker compose up -d --build
 ```
 
-The server listens at `http://127.0.0.1:49374`. The container mounts `~/repositories`, your OpenCode configuration and data, and the development caches listed in `compose.yaml`. You may need to modify the volume mounts for your personal setup.
-
-You can then connect your OpenCode to the sandboxed server with
+From your project's directory, connect using the password from `.env`:
 
 ```sh
-~/.opencode/bin/opencode --server http://127.0.0.1:49374
+OPENCODE_PASSWORD='<your server password>' opencode --server http://127.0.0.1:49374
 ```
 
-You may want to alias the above command to `opencode` in your shell configurations.
+Select **architect** or **egm-elephant** in OpenCode as described above. To stop the server, run `docker compose down` from this configuration repository.
 
 ## Maintenance
 
-Requires `just` and CUE for configuration.
-
-Edit `cue/`, not generated `opencode.json`.
+For configuration maintainers: install `just` and CUE, edit `cue/` rather than generated `opencode.json`, then run:
 
 ```sh
 just validate
 just build
 ```
 
-Run these in order with real CUE available; do not hand-edit generated JSON or substitute another compiler. Include the regenerated artifact with configuration changes and verify its rendered agents, modes, models, permissions, and prompts before treating new agents as active. For this source-only delivery, `opencode.json` intentionally remains unchanged and these checks remain pending; source checks and secondary comparisons against the checked-in Coordinator are not authoritative rendered verification.
-
-Skills live in `skills/`.
+Include the regenerated `opencode.json` with configuration changes.
