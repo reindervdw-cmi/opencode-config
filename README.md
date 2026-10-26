@@ -12,13 +12,8 @@ Run OpenCode from the project you want to work on. After editing CUE sources, fo
 
 ## Usage
 
-**Breaking source rename, no aliases:** source agent IDs and filenames drop the `interactive-` prefix. The workflow entrypoints are now `architect`, `egm-elephant`, and `egm-coordinator`; shared execution agents are `coordinator`, `scout`, `developer`, and `scrum-master`. The former single Goldfish is replaced by seven named reviewers below. Update CLI selections, links, and handoffs; no compatibility aliases are provided.
-
-**Source-only delivery:** these source names are not active in the unchanged generated `opencode.json`, which still retains the old names. CUE is unavailable in this delivery; validation, generation, and rendered-configuration verification are deferred. All renamed-agent commands below apply **only after real CUE validation and generation** using [Maintenance](#maintenance). Source inspection does not prove rendered equivalence or runtime behavior, and no new aliases are active.
-
 ```sh
-# After just validate, then just build:
-opencode --agent architect
+opencode
 ```
 
 Describe your change, choose a branch or worktree, and approve the architect's plan. Then say:
@@ -46,15 +41,15 @@ Elephant interviews you, presents alternatives (including simpler approaches), a
 
 All seven read-only, subagent-only personas use `midEffort` and own their single-lens rubric:
 
-| Reviewer source / ID | Lens |
-| --- | --- |
-| [`egm-goldfish-zoom-out`](cue/agent-egm-goldfish-zoom-out.cue) | Problem/solution fit, architecture, scope, simplicity |
-| [`egm-goldfish-comprehension`](cue/agent-egm-goldfish-comprehension.cue) | Independent reconstruction and comprehension gaps |
-| [`egm-goldfish-design`](cue/agent-egm-goldfish-design.cue) | Technical tradeoffs, failures, security, dependencies |
-| [`egm-goldfish-structural`](cue/agent-egm-goldfish-structural.cue) | Completeness, consistency, acceptance traceability |
-| [`egm-goldfish-style`](cue/agent-egm-goldfish-style.cue) | Precision, readability, consequential wording |
+| Reviewer source / ID                                                                           | Lens                                                        |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| [`egm-goldfish-zoom-out`](cue/agent-egm-goldfish-zoom-out.cue)                                 | Problem/solution fit, architecture, scope, simplicity       |
+| [`egm-goldfish-comprehension`](cue/agent-egm-goldfish-comprehension.cue)                       | Independent reconstruction and comprehension gaps           |
+| [`egm-goldfish-design`](cue/agent-egm-goldfish-design.cue)                                     | Technical tradeoffs, failures, security, dependencies       |
+| [`egm-goldfish-structural`](cue/agent-egm-goldfish-structural.cue)                             | Completeness, consistency, acceptance traceability          |
+| [`egm-goldfish-style`](cue/agent-egm-goldfish-style.cue)                                       | Precision, readability, consequential wording               |
 | [`egm-goldfish-implementation-readiness`](cue/agent-egm-goldfish-implementation-readiness.cue) | Decisions and evidence sufficient for later task derivation |
-| [`egm-goldfish-codebase-details`](cue/agent-egm-goldfish-codebase-details.cue) | Repository claims against primary codebase evidence |
+| [`egm-goldfish-codebase-details`](cue/agent-egm-goldfish-codebase-details.cue)                 | Repository claims against primary codebase evidence         |
 
 Parallelism is only within a stage: Elephant waits for **all** required reviewers, never overlaps stages or sends sibling results to reviewers, and synthesizes directly into the existing ledger. No synthesizer agent or extra artifacts are introduced. Deduplication preserves stable finding IDs, individual attribution, evidence, severity, disagreements, and human dispositions. Resolve findings/disagreements with the human and obtain an explicit stage gate before proceeding; missing, failed, or contaminated reviews block the stage rather than disappearing through consolidation.
 
