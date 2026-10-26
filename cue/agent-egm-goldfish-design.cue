@@ -4,7 +4,7 @@ agents: {
 	"egm-goldfish-design": {
 		description: "Read-only technical tradeoff, failure, security and dependency review"
 		mode:        "subagent"
-		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
+		model:       "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
 		request: {body: {temperature: 0.1}}
 		color:       "#67E8F9"
 		permissions: _egmGoldfishPermissions

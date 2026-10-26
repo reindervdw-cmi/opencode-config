@@ -4,7 +4,7 @@ agents: {
 	"egm-goldfish-codebase-details": {
 		description: "Read-only verification of design claims against primary codebase evidence"
 		mode:        "subagent"
-		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
+		model:       "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
 		request: {body: {temperature: 0.1}}
 		color:       "#67E8F9"
 		permissions: _egmGoldfishPermissions

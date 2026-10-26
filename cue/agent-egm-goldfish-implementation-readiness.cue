@@ -4,7 +4,7 @@ agents: {
 	"egm-goldfish-implementation-readiness": {
 		description: "Read-only assessment of decisions and evidence sufficient for later task derivation"
 		mode:        "subagent"
-		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
+		model:       "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
 		request: {body: {temperature: 0.1}}
 		color:       "#67E8F9"
 		permissions: _egmGoldfishPermissions

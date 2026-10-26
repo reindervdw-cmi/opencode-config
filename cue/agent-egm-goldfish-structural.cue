@@ -4,7 +4,7 @@ agents: {
 	"egm-goldfish-structural": {
 		description: "Read-only design completeness, consistency and traceability review"
 		mode:        "subagent"
-		model:       "\(_modelDefs.midEffort.provider)/\(_modelDefs.midEffort.id)"
+		model:       "\(_modelDefs.highEffort.provider)/\(_modelDefs.highEffort.id)"
 		request: {body: {temperature: 0.1}}
 		color:       "#67E8F9"
 		permissions: _egmGoldfishPermissions
