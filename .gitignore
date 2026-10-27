@@ -1,4 +1,5 @@
 # Installed dependencies and local runtime state, never distribution inputs.
+azure
 service.json
 cli.json
 node_modules/

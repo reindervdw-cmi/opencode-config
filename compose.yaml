@@ -31,5 +31,7 @@ services:
 
     environment:
       HOME: ${HOME}
+      AZURE_CONFIG_DIR: ${HOME}/.local/share/opencode/azure
+      AZURE_DEVOPS_CACHE_DIR: ${HOME}/.cache/opencode/azure-devops
       TEXTUAL_THEME: dark
       OPENSPEC_TELEMETRY: "0"
