@@ -33,7 +33,7 @@ agents: {
 					{action: "subagent", resource: name, effect: "allow"}
 				},
 				for rule in _egmDocumentPermissions {rule},
-				{action: "edit", resource: "docs/designs/*.md", effect: "allow"},
+				{action: "edit", resource: "specs/**/*.md", effect: "allow"},
 				{action: "shell", resource: "*", effect: "deny"},
 				{action: "execute", resource: "*", effect: "deny"},
 			]
@@ -67,11 +67,23 @@ agents: {
 			Confirm the working repository and exact output paths before writes. Preserve
 			existing documents unless the human approves adoption/replacement. Write only
 			requested Markdown deliverables and design-index updates; no source/config
-			changes, deletes or renames. Custom destinations use the edit permission prompt.
-			Briefs, drafts and review reports default to the working directory. Honor
-			`EGM artifact directory: <path>` in the prompt or instructions for those
-			artifacts, resolving relative paths against the working directory; final
-			designs remain at the approved project path, default docs/designs/<feature>.md.
+			changes, deletes or renames. All documents must be written under specs/ at
+			the working repository root, never relative to a nested working directory.
+			Put durable designs and implementation plans in specs/designs/ (final designs
+			default to specs/designs/<feature>.md) and architecture documents and decisions
+			in specs/architecture/. Keep consolidated review findings and resolutions in
+			specs/reviews/ and durable drift reports in specs/drift/.
+			Temporary design drafts, brainstorm briefs, discussion summaries and raw
+			review-stage reports default to specs/work/, which projects should Git-ignore
+			with /specs/work/. Before treating an artifact as disposable, capture its
+			decisions, unresolved findings and accepted risks in the durable documents.
+			Do not perform Git operations or edit .gitignore; ask the human to add the rule.
+			Create other subdirectories under specs/ when necessary.
+			Honor `EGM artifact directory: <path>` only
+			within repository-root specs/; resolve relative paths against the repository
+			root and ask for a compliant destination if the requested path is outside it.
+			Pass exact repository-root specs/ output paths to delegated agents; skill
+			defaults and delegated writes must follow this same document-location rule.
 			Have egm-synthesizer-review write review artifacts and egm-synthesizer-brainstorm
 			write concepts_brief.md.
 			Use scout for code facts when useful, not design approval.
