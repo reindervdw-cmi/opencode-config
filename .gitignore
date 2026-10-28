@@ -32,3 +32,5 @@ secrets/
 *.key
 /opencode.local.json
 /opencode.local.jsonc
+/specs/
+/local/

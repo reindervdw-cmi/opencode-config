@@ -1,6 +1,9 @@
+FROM cuelang/cue:0.17.1 AS cue-source
 FROM ghcr.io/anomalyco/opencode:2.1.4
 
 USER root
+
+COPY --from=cue-source /usr/bin/cue /usr/local/bin/cue
 
 RUN apk add --no-cache \
     bash \
@@ -19,6 +22,23 @@ RUN apk add --no-cache \
     python3-dev \
     rust \
     uv
+
+# Keep container interpreters separate from host-mounted uv installations.
+ENV UV_PYTHON_INSTALL_DIR=/opt/uv/python
+ENV UV_PYTHON_BIN_DIR=/opt/uv/bin
+ENV PATH="/opt/uv/bin:${PATH}"
+
+RUN uv python install 3.12 3.13 3.14 \
+    && /opt/uv/bin/python3.12 --version \
+    && /opt/uv/bin/python3.13 --version \
+    && /opt/uv/bin/python3.14 --version
+
+ENV UV_TOOL_DIR=/opt/uv/tools
+ENV UV_TOOL_BIN_DIR=/usr/local/bin
+
+# Common Python tools
+RUN uv tool install --python 3.12 prek \
+    && prek --version
 
 # Azure CLI is not packaged in the base image's Alpine repositories.
 RUN uv venv --python /usr/bin/python3 /opt/azure-cli \
@@ -44,4 +64,4 @@ USER 1000:1000
 # Compose sets HOME at runtime, but the build user has no writable home.
 RUN HOME="$(mktemp -d)" bash -c 'export AZURE_CONFIG_DIR="$HOME/.azure" \
     && az --version && az boards --help \
-    && git --version && uv --version && cargo --version && rustc --version && node --version && npm --version && nvm --version'
+    && cue version && git --version && uv --version && cargo --version && rustc --version && node --version && npm --version && nvm --version'
