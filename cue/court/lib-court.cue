@@ -14,6 +14,8 @@ _globalDeny: {action: "*", resource: "*", effect: "deny"}
 _hashRules: [
 	{action: "shell", resource: "sha256sum -- *local/specs/*.md", effect: "allow"},
 	{action: "shell", resource: "sha256sum -- *local/specs/**/*.md", effect: "allow"},
+	{action: "shell", resource: "sha256sum -- '*local/specs/*.md'", effect: "allow"},
+	{action: "shell", resource: "sha256sum -- '*local/specs/**/*.md'", effect: "allow"},
 ]
 _compositionGuards: [for pattern in ["*>*", "*<*", "*;*", "*|*", "*&*", "*$*", "*`*", "*\n*"] {
 	action: "shell", resource: pattern, effect: "deny"

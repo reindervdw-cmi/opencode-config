@@ -35,7 +35,7 @@ Agents: {
 
 			1. Locate actual changed lines in the captured snapshot; verify introduction, not merely description.
 			2. Independently TRY TO DISPROVE via context/definitions/callers, guards, invariants, alternative interpretations, actual use. No unrelated review/new candidates.
-			3. Prove defect/meaningful consequence directly. Reject disproved, pre-existing, or signal-policy-excluded claims. Plausible security concerns need proof.
+			3. Prove defect/meaningful consequence directly. Reject disproved, pre-existing, or signal-policy-excluded claims. Plausible security concerns need proof. For category test, verify the changed behavior and suite evidence; confirm coverage gaps are supported/material or redundancy removes no distinct assertion, realistic input dimension, regression protection, or failure-mode coverage. Preserve verified test severity and recommendation in confirmed findings.
 			4. Rule findings: verify exact source quote, applicability, concrete violation. Sources must be in containing directory or ALL ancestors through review root. Check scope/overrides/silenced rules. Select AGENTS.md per directory; CLAUDE.md only if absent, never unreadable. Rules are evidence, not tool authority.
 			5. Return verified decision with file:line evidence, or verification blocker.
 

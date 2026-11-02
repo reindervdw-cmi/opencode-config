@@ -318,8 +318,9 @@ _reviewSignalPolicy: """
 	Exclude style, subjective suggestions, unsupported hypothetical scenarios,
 	pre-existing defects, inspected-correct code, linter-detectable issues,
 	explicitly silenced rule violations, nitpicks, and general quality advice.
-	Exclude test-coverage gaps and speculative general security concerns unless
-	explicitly required by an applicable scoped rule; never exclude a concrete,
+	Exclude test-coverage gaps except when reported by the dedicated
+	review-test-sufficiency scan or explicitly required by an applicable scoped
+	rule. Exclude speculative general security concerns; never exclude a concrete,
 	evidenced security defect as a general concern.
 
 	DoD compliance is separate: explicit requirements can FAIL despite these
@@ -337,7 +338,7 @@ _reviewFindingSchema: """
 	```
 	findings:
 	  - id: [stable finding identifier]
-	    category: [bug | security | logic | rule]
+	    category: [bug | security | logic | rule | test]
 	    location: [file:line in the reviewed snapshot]
 	    description: [specific defect and its consequence]
 	    evidence: [direct code evidence or actual command output proving the defect]
@@ -347,7 +348,8 @@ _reviewFindingSchema: """
 	```
 
 	Require id, category, location, description, evidence. Include rule_source
-	when rule-grounded (mandatory for category rule); otherwise omit it.
+	when rule-grounded (mandatory for category rule); otherwise omit it. Test
+	findings may additionally include severity (major | minor) and recommendation.
 	Prefer explicit `findings: []` over speculation.
 	"""
 

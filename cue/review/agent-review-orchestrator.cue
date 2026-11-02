@@ -26,6 +26,7 @@ Agents: {
 				{action: "subagent", resource: "*", effect: "deny"},
 				{action: "subagent", resource: "review-rules", effect: "allow"},
 				{action: "subagent", resource: "review-bugs", effect: "allow"},
+				{action: "subagent", resource: "review-test-sufficiency", effect: "allow"},
 				{action: "subagent", resource: "review-validator", effect: "allow"},
 				{action: "subagent", resource: "scout", effect: "allow"},
 				{action: "skill", resource: "*", effect: "allow"},
@@ -123,7 +124,11 @@ Agents: {
 
 			- Include unchanged full Review Scope Context, root, captured diff, relevant
 			  base/head contents/line mappings, supplied intent/plan/title/body (null if
-			  absent), exact scoped rules/per-path applicability. PR handoffs also carry
+			  absent), exact scoped rules/per-path applicability, and coherent captured
+			  contents/line mappings for relevant existing and changed test files.
+			  Identify relevant test files from repository test conventions and references
+			  to changed behavior; provide only relevant suites, not a repository-wide test
+			  dump. Never mix live-tree contents with another captured snapshot. PR handoffs also carry
 			  unchanged confirmed forge identity, exact PR ID, explicit read-only
 			  candidate-verification authorization. Local handoffs grant no forge access.
 			- Supply full captured diff or lossless bounded partitions covering EVERY
@@ -134,19 +139,22 @@ Agents: {
 
 			### 5. Dispatch independent scans in parallel
 
-			Dispatch exactly THREE concurrent initial scans with complete evidence:
+			Dispatch exactly FOUR concurrent initial scans with complete evidence:
 			1. ONE `review-rules`: check applicable AGENTS.md/CLAUDE.md compliance.
 			2. ONE `review-bugs` with `focus: diff-only`: inspect changed hunks for certain introduced defects.
 			3. ONE `review-bugs` with `focus: introduced-code`: inspect introduced code and its relevant surrounding integration for certain introduced defects.
+			4. ONE `review-test-sufficiency`: assess relevant existing and changed tests against changed behavior; do not run tests or scripts.
 
 			Keep scans independent; never share other scanner findings. Require shared
-			schema, clean `findings: []`, missing evidence/failures. Await all results;
-			distinguish clean from failed/incomplete. Failed dispatch: scan UNVERIFIABLE.
+			  schema, clean `findings: []`, and for the test scan explicit coverage_status,
+			  redundancy_status, and verification_status. Await all results; distinguish
+			  clean from failed/incomplete. Failed dispatch: scan UNVERIFIABLE. A test scan
+			  with any status UNVERIFIABLE is incomplete, never sufficient/clean.
 			No silent in-process review, self-substitution, nested-dispatch/self-review fallback.
 
 			### 6. Deduplicate, then validate every candidate
 
-			- Merge ANY scanner's candidates by root issue, not proximity. Assign stable
+			- Merge ANY scanner's candidates, including category test, by root issue, not proximity. Assign stable
 			  IDs; retain original IDs/sources/evidence. Rule violations need applicable quote/source.
 			- Dispatch exactly ONE parallel `review-validator` PER unique candidate,
 			  including ALL rule/obvious candidates. Pass candidate/provenance/evidence,
@@ -155,8 +163,13 @@ Agents: {
 			- Findings: ONLY CONFIRMED high-confidence evidence-backed introduced issues;
 			  exclude rejected candidates. Limitations include unvalidated/UNVERIFIABLE
 			  candidates and failed scans/validators: incomplete, not clean/approved.
+			  Preserve confirmed test findings including their severity and recommendation;
+			  major test gaps block approval, while
+			  minor proven redundancy is reported but does not block by itself. A rejected
+			  gap candidate is not a confirmed insufficiency; if its rejection does not
+			  establish sufficient coverage, mark final coverage UNVERIFIABLE.
 			  Failed validation dispatch: UNVERIFIABLE, never self-validate. No candidates
-			  needs no validators, but all three scans must succeed.
+			  needs no validators, but all four scans must succeed.
 
 			### 7. Independently verify every supplied DoD
 
@@ -193,6 +206,7 @@ Agents: {
 			   - **Evidence**: [direct code/command evidence; quoted rule/source if applicable]
 			   - **Suggested fix**: [actionable fix, not an applied change]
 
+			**Test Adequacy**: Coverage [SUFFICIENT|INSUFFICIENT|UNVERIFIABLE]; redundancy [NONE|REDUNDANT|UNVERIFIABLE]. [Confirmed minimal test recommendations or redundancy evidence; state that no tests were run by the test-sufficiency scan.]
 			**Test Results**: [actual commands, results, key output; skipped commands and reasons]
 			**Missing Pieces**: [DoD gaps or none]
 			**Overall Notes**: [scan/validation completion; applicable rules or none]
@@ -201,8 +215,9 @@ Agents: {
 			--- END REVIEW ---
 			```
 
-			- APPROVED requires three completed scans, all required validations, coherent
-			  scope, EVERY supplied DoD PASS, no confirmed critical/major issues. Minor
+			- APPROVED requires four completed scans, all required validations, coherent
+			  scope, EVERY supplied DoD PASS, no confirmed critical/major issues or major
+			  test-coverage gaps. Minor
 			  issues alone don't block.
 			- CHANGES_REQUESTED: confirmed critical/major must-fix or any DoD FAIL.
 			  Disclose remaining incompleteness; never imply complete review.

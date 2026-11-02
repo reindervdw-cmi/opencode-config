@@ -50,12 +50,5 @@ providers: {
 		settings: {
 			baseURL: "https://cmi-apim-01.azure-api.net/CMI-APIM/openai"
 		}
-		models: {
-			for _, model in _apim_models {
-				(model.id): {
-					name: model.name
-				}
-			}
-		}
 	}
 }

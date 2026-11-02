@@ -19,8 +19,8 @@ _magisterPermissions: list.Concat([
 		for id in ["scout", "magister-synthesizer-review", "seneschal"] {
 			{action: "subagent", resource: id, effect: "allow"}
 		},
-		{action: "edit", resource: "local/specs/*.md", effect: "allow"},
-		{action: "edit", resource: "local/specs/**/*.md", effect: "allow"},
+		{action: "edit", resource: "**/local/specs/*.md", effect: "allow"},
+		{action: "edit", resource: "**/local/specs/**/*.md", effect: "allow"},
 	],
 ])
 

@@ -9,6 +9,7 @@ import (
 _workerPermissions: list.Concat([
 	(shared.Shell & {#rules: shared.DenyAll}).out,
 	interactive.Agents["developer"].permissions,
+	(shared.ShellRules & {#frags: [shared.GitRead]}).out,
 ])
 
 Agents: "magister-developer": {
